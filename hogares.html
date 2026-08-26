@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Domus — Mis hogares</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2f5d50" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
+  <script type="module" src="js/register-sw.js"></script>
+</head>
+<body>
+  <nav class="navbar navbar-domus navbar-expand">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">Domus</span>
+      <button id="btn-salir" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <div class="container py-4 py-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Mis hogares</h2>
+      <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-hogar">
+        + Nuevo hogar
+      </button>
+    </div>
+
+    <div id="mensaje"></div>
+    <div id="lista-hogares" class="row g-3">
+      <p class="text-muted">Cargando tus hogares...</p>
+    </div>
+  </div>
+
+  <!-- Modal: crear hogar -->
+  <div class="modal fade" id="modal-nuevo-hogar" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form-nuevo-hogar">
+          <div class="modal-header">
+            <h5 class="modal-title">Crear nuevo hogar</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal"></div>
+            <div class="mb-3">
+              <label for="nombre-hogar" class="form-label">Nombre del hogar</label>
+              <input type="text" class="form-control" id="nombre-hogar" placeholder="Ej. Sebastián y Valeria" required />
+            </div>
+            <div class="mb-3">
+              <label for="descripcion-hogar" class="form-label">Descripción (opcional)</label>
+              <input type="text" class="form-control" id="descripcion-hogar" />
+            </div>
+            <div class="mb-3">
+              <label for="presupuesto-hogar" class="form-label">Presupuesto mensual (opcional)</label>
+              <input type="number" min="0" step="1000" class="form-control" id="presupuesto-hogar" placeholder="0" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-crear-hogar" class="btn btn-domus-primary">Crear hogar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { protegerPagina, cerrarSesion } from './js/auth.js';
+    import { listarMisHogares, crearHogar, fijarHogarActivo } from './js/hogares.js';
+    import { mostrarMensaje, limpiarMensaje, alternarCargando } from './js/ui.js';
+
+    const sesion = await protegerPagina();
+    if (sesion) await cargarHogares();
+
+    document.getElementById('btn-salir').addEventListener('click', async () => {
+      await cerrarSesion();
+      window.location.href = 'index.html';
+    });
+
+    async function cargarHogares() {
+      const contenedor = document.getElementById('lista-hogares');
+      try {
+        const hogares = await listarMisHogares();
+        if (hogares.length === 0) {
+          contenedor.innerHTML = `
+            <div class="col-12">
+              <p class="text-muted">Todavía no perteneces a ningún hogar. Crea el primero con el botón de arriba.</p>
+            </div>`;
+          return;
+        }
+        contenedor.innerHTML = hogares
+          .map(
+            (h) => `
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card domus-hogar-card shadow-sm h-100" data-hogar-id="${h.id}">
+                <div class="card-body">
+                  <h5 class="card-title">${escapeHtml(h.nombre)}</h5>
+                  <p class="card-text text-muted small mb-2">${escapeHtml(h.descripcion || 'Sin descripción')}</p>
+                  <span class="badge text-bg-light border">${h.mi_rol}</span>
+                </div>
+              </div>
+            </div>`
+          )
+          .join('');
+
+        contenedor.querySelectorAll('[data-hogar-id]').forEach((tarjeta) => {
+          tarjeta.addEventListener('click', () => {
+            fijarHogarActivo(tarjeta.dataset.hogarId);
+            window.location.href = 'dashboard.html';
+          });
+        });
+      } catch (error) {
+        mostrarMensaje('mensaje', 'No se pudieron cargar tus hogares: ' + error.message);
+      }
+    }
+
+    document.getElementById('form-nuevo-hogar').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal');
+      const nombre = document.getElementById('nombre-hogar').value.trim();
+      const descripcion = document.getElementById('descripcion-hogar').value.trim();
+      const presupuesto = Number(document.getElementById('presupuesto-hogar').value || 0);
+
+      alternarCargando('btn-crear-hogar', true);
+      try {
+        const hogar = await crearHogar({ nombre, descripcion, presupuestoMensual: presupuesto });
+        fijarHogarActivo(hogar.id);
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        mostrarMensaje('mensaje-modal', 'No se pudo crear el hogar: ' + error.message);
+        alternarCargando('btn-crear-hogar', false, 'Crear hogar');
+      }
+    });
+
+    function escapeHtml(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

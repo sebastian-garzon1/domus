@@ -1,0 +1,75 @@
+/* ============================================================================
+   DOMUS — Estilos compartidos (encima de Bootstrap 5)
+   ============================================================================ */
+
+:root {
+  --domus-primary: #2f5d50;   /* verde hogar, cálido */
+  --domus-primary-dark: #234a3f;
+  --domus-accent: #d98e04;    /* acento cálido para alertas/destacados */
+  --domus-bg: #f7f5f0;
+}
+
+body {
+  background-color: var(--domus-bg);
+  min-height: 100vh;
+}
+
+.domus-auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.domus-auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.domus-logo {
+  font-weight: 700;
+  color: var(--domus-primary);
+  letter-spacing: -0.02em;
+}
+
+.btn-domus-primary {
+  background-color: var(--domus-primary);
+  border-color: var(--domus-primary);
+  color: #fff;
+}
+.btn-domus-primary:hover,
+.btn-domus-primary:focus {
+  background-color: var(--domus-primary-dark);
+  border-color: var(--domus-primary-dark);
+  color: #fff;
+}
+
+.navbar-domus {
+  background-color: var(--domus-primary);
+}
+.navbar-domus .navbar-brand,
+.navbar-domus .nav-link {
+  color: #fff !important;
+}
+
+.domus-stat-card {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.domus-hogar-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.domus-hogar-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.domus-modulo-pendiente {
+  border: 2px dashed #d0cabb;
+  border-radius: 0.75rem;
+  color: #8a8272;
+}

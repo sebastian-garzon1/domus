@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Domus — Mi perfil</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2f5d50" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
+  <script type="module" src="js/register-sw.js"></script>
+</head>
+<body>
+  <nav class="navbar navbar-domus navbar-expand">
+    <div class="container">
+      <a class="navbar-brand mb-0 h1" href="dashboard.html">Domus</a>
+      <a href="dashboard.html" class="btn btn-outline-light btn-sm">← Volver al panel</a>
+    </div>
+  </nav>
+
+  <div class="container py-4 py-md-5" style="max-width: 480px;">
+    <h2 class="mb-4">Mi perfil</h2>
+
+    <div id="mensaje"></div>
+
+    <form id="form-perfil">
+      <div class="mb-3">
+        <label class="form-label">Correo</label>
+        <input type="email" id="email" class="form-control" disabled />
+      </div>
+      <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre completo</label>
+        <input type="text" id="nombre" class="form-control" required />
+      </div>
+      <button type="submit" id="btn-guardar" class="btn btn-domus-primary">Guardar cambios</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { protegerPagina, obtenerUsuarioActual } from './js/auth.js';
+    import { supabase } from './js/supabaseClient.js';
+    import { mostrarMensaje, limpiarMensaje, alternarCargando } from './js/ui.js';
+
+    const sesion = await protegerPagina();
+    let usuario = null;
+
+    if (sesion) {
+      usuario = await obtenerUsuarioActual();
+      const { data: perfil, error } = await supabase
+        .from('profiles')
+        .select('nombre_completo, email')
+        .eq('id', usuario.id)
+        .single();
+
+      if (!error && perfil) {
+        document.getElementById('email').value = perfil.email;
+        document.getElementById('nombre').value = perfil.nombre_completo ?? '';
+      }
+    }
+
+    document.getElementById('form-perfil').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje');
+      const nombre = document.getElementById('nombre').value.trim();
+
+      alternarCargando('btn-guardar', true);
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ nombre_completo: nombre })
+          .eq('id', usuario.id);
+        if (error) throw error;
+        mostrarMensaje('mensaje', 'Perfil actualizado.', 'success');
+      } catch (error) {
+        mostrarMensaje('mensaje', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar', false, 'Guardar cambios');
+      }
+    });
+  </script>
+</body>
+</html>
