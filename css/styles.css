@@ -1,35 +1,51 @@
 /* ============================================================================
-   DOMUS — Estilos compartidos (encima de Bootstrap 5, tema oscuro tipo GitHub)
-   Cada página activa el tema oscuro nativo de Bootstrap con
-   <html data-bs-theme="dark">; aquí solo afinamos los tokens de color y
-   agregamos el layout de sidebar/offcanvas que no trae Bootstrap.
+   DOMUS — Estilos compartidos (encima de Bootstrap 5)
+   Tema oscuro neumórfico ("soft-UI"): un único color de fondo para toda la
+   superficie (body, sidebar, tarjetas, modales...) — lo que da la sensación
+   de volumen 3D son pares de sombras (una clara arriba-izquierda, una oscura
+   abajo-derecha) que hacen que los elementos parezcan "salir" o "hundirse"
+   del fondo, en vez de bordes o cambios de color de superficie.
    ============================================================================ */
 
 :root {
-  --domus-bg: #0d1117;              /* fondo de página */
-  --domus-bg-inset: #010409;        /* sidebar / topbar móvil (más oscuro) */
-  --domus-surface: #161b22;         /* tarjetas, modales, list-group */
-  --domus-surface-hover: #1c2430;
-  --domus-border: #30363d;
-  --domus-text: #e6edf3;
-  --domus-text-muted: #8b949e;
+  --domus-bg: #262a34;              /* único color de fondo: body, sidebar, tarjetas... */
+  --domus-text: #eceef2;
+  --domus-text-muted: #9aa0ad;
 
-  --domus-primary: #238636;         /* verde para botones (contraste con blanco) */
-  --domus-primary-hover: #2ea043;
-  --domus-primary-text: #3fb950;    /* verde más claro para texto/acentos sobre fondo oscuro */
-  --domus-primary-soft: rgba(63, 185, 80, 0.15);
+  --domus-shadow-dark: rgba(0, 0, 0, 0.55);
+  --domus-shadow-light: rgba(255, 255, 255, 0.07);
+
+  --domus-primary: #2ea043;         /* verde para botones (contraste con blanco) */
+  --domus-primary-hover: #35b94d;
+  --domus-primary-text: #4cc161;    /* verde más claro para texto/acentos */
+  --domus-primary-soft: rgba(76, 193, 97, 0.14);
   --domus-accent: #d29922;          /* ámbar para prioridades/alertas */
+
+  --domus-radius: 1rem;
+  --domus-radius-sm: 0.7rem;
 }
 
-/* Alinea las variables de Bootstrap con la paleta oscura de Domus */
+/* Sombra "elevada" (el elemento sale del fondo) y su variante "hundida"
+   (inputs, estados presionados/activos) — reutilizadas en todo el archivo. */
+.domus-raised {
+  box-shadow: 7px 7px 14px var(--domus-shadow-dark), -6px -6px 13px var(--domus-shadow-light);
+}
+.domus-inset {
+  box-shadow: inset 4px 4px 8px var(--domus-shadow-dark), inset -4px -4px 8px var(--domus-shadow-light);
+}
+
+/* Alinea las variables de Bootstrap con la paleta de Domus */
 [data-bs-theme='dark'] {
   --bs-body-bg: var(--domus-bg);
   --bs-body-color: var(--domus-text);
-  --bs-border-color: var(--domus-border);
-  --bs-card-bg: var(--domus-surface);
-  --bs-tertiary-bg: var(--domus-surface);
-  --bs-secondary-bg: var(--domus-surface);
+  --bs-border-color: transparent;
+  --bs-card-bg: var(--domus-bg);
+  --bs-card-border-color: transparent;
+  --bs-tertiary-bg: var(--domus-bg);
+  --bs-secondary-bg: var(--domus-bg);
   --bs-emphasis-color: #ffffff;
+  --bs-modal-bg: var(--domus-bg);
+  --bs-offcanvas-bg: var(--domus-bg);
 }
 
 body {
@@ -40,6 +56,77 @@ body {
 
 a {
   color: var(--domus-primary-text);
+}
+
+/* --- Formularios: look "hundido" (grabado en el fondo) --------------------- */
+
+.form-control,
+.form-select,
+textarea.form-control {
+  background-color: var(--domus-bg);
+  border: none;
+  border-radius: var(--domus-radius-sm);
+  color: var(--domus-text);
+  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--domus-bg);
+  color: var(--domus-text);
+  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light),
+    0 0 0 0.2rem var(--domus-primary-soft);
+}
+.form-control::placeholder {
+  color: var(--domus-text-muted);
+}
+.form-control:disabled {
+  background-color: var(--domus-bg);
+  opacity: 0.6;
+}
+
+/* --- Botones ---------------------------------------------------------------- */
+
+.btn-domus-primary {
+  background-color: var(--domus-primary);
+  border: none;
+  color: #fff;
+  border-radius: var(--domus-radius-sm);
+  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -3px -3px 8px rgba(255, 255, 255, 0.03);
+  transition: box-shadow 0.12s ease, transform 0.12s ease, background-color 0.12s ease;
+}
+.btn-domus-primary:hover,
+.btn-domus-primary:focus {
+  background-color: var(--domus-primary-hover);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.btn-domus-primary:active {
+  transform: translateY(0);
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
+}
+
+.btn-outline-secondary,
+.btn-outline-danger {
+  background-color: var(--domus-bg);
+  border: none;
+  border-radius: var(--domus-radius-sm);
+  box-shadow: 4px 4px 9px var(--domus-shadow-dark), -3px -3px 8px var(--domus-shadow-light);
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+.btn-outline-secondary {
+  color: var(--domus-text);
+}
+.btn-outline-danger {
+  color: #e5534b;
+}
+.btn-outline-secondary:hover,
+.btn-outline-danger:hover {
+  transform: translateY(-1px);
+}
+.btn-outline-secondary:active,
+.btn-outline-danger:active {
+  transform: translateY(0);
+  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
 }
 
 /* --- Páginas de autenticación (login, registro, recuperar) ---------------- */
@@ -55,25 +142,16 @@ a {
 .domus-auth-card {
   width: 100%;
   max-width: 420px;
-  border: 1px solid var(--domus-border);
+  background-color: var(--domus-bg);
+  border: none;
+  border-radius: var(--domus-radius);
+  box-shadow: 10px 10px 22px var(--domus-shadow-dark), -8px -8px 20px var(--domus-shadow-light);
 }
 
 .domus-logo {
   font-weight: 700;
   color: var(--domus-primary-text);
   letter-spacing: -0.02em;
-}
-
-.btn-domus-primary {
-  background-color: var(--domus-primary);
-  border-color: var(--domus-primary);
-  color: #fff;
-}
-.btn-domus-primary:hover,
-.btn-domus-primary:focus {
-  background-color: var(--domus-primary-hover);
-  border-color: var(--domus-primary-hover);
-  color: #fff;
 }
 
 /* --- Shell de la app: sidebar fija (desktop) + topbar/offcanvas (móvil) --- */
@@ -93,13 +171,14 @@ a {
 .domus-sidebar {
   width: 260px;
   flex-shrink: 0;
-  background-color: var(--domus-bg-inset);
-  border-right: 1px solid var(--domus-border);
+  background-color: var(--domus-bg);
   padding: 1.25rem 1rem;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  box-shadow: 5px 0 16px var(--domus-shadow-dark);
+  z-index: 5;
 }
 
 .domus-sidebar-brand {
@@ -116,42 +195,44 @@ a {
 .domus-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.6rem;
 }
 
 .domus-sidebar-link {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--domus-radius-sm);
   color: var(--domus-text-muted);
   text-decoration: none;
   font-size: 0.925rem;
+  transition: box-shadow 0.12s ease, color 0.12s ease;
 }
 .domus-sidebar-link:hover {
-  background-color: var(--domus-surface-hover);
+  box-shadow: 3px 3px 7px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
   color: var(--domus-text);
 }
 .domus-sidebar-link.active {
-  background-color: var(--domus-primary-soft);
+  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
   color: var(--domus-primary-text);
   font-weight: 600;
 }
 
 .domus-topbar-mobile {
-  background-color: var(--domus-bg-inset);
-  border-bottom: 1px solid var(--domus-border);
+  background-color: var(--domus-bg);
   padding: 0.65rem 1rem;
   position: sticky;
   top: 0;
   z-index: 1020;
+  box-shadow: 0 5px 14px var(--domus-shadow-dark);
 }
 
 .domus-sidebar-offcanvas {
-  background-color: var(--domus-bg-inset);
-  border-right: 1px solid var(--domus-border);
+  background-color: var(--domus-bg);
+  border: none;
   width: 260px;
+  box-shadow: 10px 0 24px var(--domus-shadow-dark);
 }
 
 .domus-main {
@@ -167,32 +248,54 @@ a {
 
 /* --- Tarjetas y componentes reutilizables ---------------------------------- */
 
-.domus-stat-card {
-  border: 1px solid var(--domus-border);
-  border-radius: 0.75rem;
-  background-color: var(--domus-surface);
+.card,
+.domus-stat-card,
+.modal-content,
+.domus-hogar-card,
+.domus-modulo-pendiente {
+  background-color: var(--domus-bg);
+  border: none;
+  border-radius: var(--domus-radius);
+  box-shadow: 7px 7px 14px var(--domus-shadow-dark), -6px -6px 13px var(--domus-shadow-light);
 }
 
 .domus-hogar-card {
-  border: 1px solid var(--domus-border);
-  background-color: var(--domus-surface);
   cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 .domus-hogar-card:hover {
-  border-color: var(--domus-primary-text);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 10px 10px 20px var(--domus-shadow-dark), -8px -8px 18px var(--domus-shadow-light);
 }
 
 .domus-modulo-pendiente {
-  border: 1px dashed var(--domus-border);
-  border-radius: 0.75rem;
   color: var(--domus-text-muted);
-  background-color: var(--domus-surface);
+  opacity: 0.75;
 }
 
 .list-group-item {
-  background-color: var(--domus-surface);
-  border-color: var(--domus-border);
+  background-color: var(--domus-bg);
+  border: none;
   color: var(--domus-text);
+  border-radius: var(--domus-radius-sm) !important;
+  margin-bottom: 0.6rem;
+  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -4px -4px 10px var(--domus-shadow-light);
+}
+.list-group-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Barra de progreso (resumen de presupuesto en gastos.html): riel hundido,
+   relleno con color plano de Bootstrap (bg-success/warning/danger). */
+.progress {
+  background-color: var(--domus-bg);
+  border-radius: 999px;
+  box-shadow: inset 2px 2px 5px var(--domus-shadow-dark), inset -2px -2px 5px var(--domus-shadow-light);
+}
+.progress-bar {
+  border-radius: 999px;
+}
+
+.offcanvas-header .btn-close {
+  filter: invert(1) grayscale(100%);
 }

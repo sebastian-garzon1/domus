@@ -20,6 +20,7 @@
         <a href="dashboard.html" class="domus-sidebar-link active">🏠 Inicio</a>
         <a href="mercado.html" class="domus-sidebar-link">🛒 Mercado</a>
         <a href="gastos.html" class="domus-sidebar-link">💰 Gastos</a>
+        <a href="servicios.html" class="domus-sidebar-link">🧾 Servicios</a>
         <a href="miembros.html" class="domus-sidebar-link">👥 Miembros</a>
         <a href="hogares.html" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
         <a href="perfil.html" class="domus-sidebar-link">⚙️ Mi perfil</a>
@@ -64,8 +65,8 @@
       </div>
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
-          <span class="text-muted small">Próximos pagos</span>
-          <span class="h4 mb-0 mt-1 text-muted">—</span>
+          <span class="text-muted small">Próximo pago</span>
+          <span id="stat-proximo-pago" class="h6 mb-0 mt-1">—</span>
         </div>
       </div>
     </div>
@@ -89,10 +90,12 @@
         </a>
       </div>
       <div class="col-12 col-md-6 col-lg-4">
-        <div class="domus-modulo-pendiente p-4 text-center h-100 d-flex flex-column justify-content-center">
-          <strong>🧾 Servicios y pagos</strong>
-          <span class="small mt-1">Próximamente</span>
-        </div>
+        <a href="servicios.html" class="text-decoration-none">
+          <div class="card domus-hogar-card shadow-sm p-4 text-center h-100 d-flex flex-column justify-content-center">
+            <strong>🧾 Servicios y pagos</strong>
+            <span class="small mt-1 text-muted">Pagos recurrentes y comprobantes</span>
+          </div>
+        </a>
       </div>
       <div class="col-12 col-md-6 col-lg-4">
         <div class="domus-modulo-pendiente p-4 text-center h-100 d-flex flex-column justify-content-center">
@@ -126,6 +129,7 @@
           <a href="dashboard.html" class="domus-sidebar-link active">🏠 Inicio</a>
           <a href="mercado.html" class="domus-sidebar-link">🛒 Mercado</a>
           <a href="gastos.html" class="domus-sidebar-link">💰 Gastos</a>
+          <a href="servicios.html" class="domus-sidebar-link">🧾 Servicios</a>
           <a href="miembros.html" class="domus-sidebar-link">👥 Miembros</a>
           <a href="hogares.html" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
           <a href="perfil.html" class="domus-sidebar-link">⚙️ Mi perfil</a>
@@ -141,6 +145,7 @@
     import { obtenerHogarActivoValidado } from './js/hogares.js';
     import { listarItems, calcularTotales } from './js/mercado.js';
     import { listarGastos, calcularResumenMes } from './js/gastos.js';
+    import { listarServicios, calcularResumenServicios } from './js/servicios.js';
     import { mostrarMensaje, formatearMoneda } from './js/ui.js';
 
     const sesion = await protegerPagina();
@@ -164,6 +169,7 @@
         document.getElementById('stat-presupuesto').textContent = formatearMoneda(hogar.presupuesto_mensual);
         await cargarResumenMercado(hogar.id);
         await cargarResumenGastos(hogar);
+        await cargarResumenServicios(hogar.id);
       } catch (error) {
         mostrarMensaje('mensaje', 'No se pudo cargar el hogar: ' + error.message);
       }
@@ -184,6 +190,18 @@
         const gastos = await listarGastos(hogar.id);
         const { totalGastado } = calcularResumenMes(gastos, hogar.presupuesto_mensual);
         document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastado);
+      } catch {
+        // El dashboard no debe romperse si falla el resumen de un módulo secundario.
+      }
+    }
+
+    async function cargarResumenServicios(hogarId) {
+      try {
+        const servicios = await listarServicios(hogarId);
+        const { proximoPago } = calcularResumenServicios(servicios);
+        document.getElementById('stat-proximo-pago').textContent = proximoPago
+          ? `${proximoPago.nombre} · ${formatearMoneda(proximoPago.monto)}`
+          : 'Sin pendientes';
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.
       }

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Domus — Servicios y pagos</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d1117" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
+  <script type="module" src="js/register-sw.js"></script>
+</head>
+<body>
+  <div class="domus-app-shell">
+    <aside class="domus-sidebar d-none d-md-flex flex-column">
+      <a href="dashboard.html" class="domus-sidebar-brand">🏠 Domus</a>
+      <nav class="domus-sidebar-nav flex-grow-1">
+        <a href="dashboard.html" class="domus-sidebar-link">🏠 Inicio</a>
+        <a href="mercado.html" class="domus-sidebar-link">🛒 Mercado</a>
+        <a href="gastos.html" class="domus-sidebar-link">💰 Gastos</a>
+        <a href="servicios.html" class="domus-sidebar-link active">🧾 Servicios</a>
+        <a href="miembros.html" class="domus-sidebar-link">👥 Miembros</a>
+        <a href="hogares.html" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
+        <a href="perfil.html" class="domus-sidebar-link">⚙️ Mi perfil</a>
+      </nav>
+      <button id="btn-salir" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
+    </aside>
+
+    <div class="domus-content-col">
+      <div class="domus-topbar-mobile d-flex d-md-none align-items-center justify-content-between">
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">☰</button>
+        <span class="domus-sidebar-brand mb-0">🏠 Domus</span>
+        <span style="width: 38px"></span>
+      </div>
+
+      <main class="domus-main flex-grow-1" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 class="mb-0">🧾 Servicios de <span id="nombre-hogar">este hogar</span></h2>
+      <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-servicio">
+        + Agregar servicio
+      </button>
+    </div>
+
+    <div id="mensaje"></div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card domus-stat-card p-3 h-100">
+          <span class="text-muted small">Próximo vencimiento</span>
+          <span id="stat-proximo" class="h6 mb-0 mt-1">—</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card domus-stat-card p-3 h-100">
+          <span class="text-muted small">Pendientes</span>
+          <span id="stat-pendientes" class="h5 mb-0 mt-1">—</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card domus-stat-card p-3 h-100">
+          <span class="text-muted small">Por pagar (total)</span>
+          <span id="stat-total-pendiente" class="h5 mb-0 mt-1">—</span>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card domus-stat-card p-3 h-100">
+          <span class="text-muted small">Pagados este mes</span>
+          <span id="stat-pagados-mes" class="h5 mb-0 mt-1">—</span>
+        </div>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="tabs-servicios">
+      <li class="nav-item">
+        <button class="nav-link active" data-vista="pendiente" type="button">
+          Pendientes <span id="badge-pendientes" class="badge text-bg-light border ms-1">0</span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-vista="pagado" type="button">
+          Historial de pagados <span id="badge-pagados" class="badge text-bg-light border ms-1">0</span>
+        </button>
+      </li>
+    </ul>
+
+    <ul id="lista-servicios" class="list-group">
+      <li class="list-group-item text-muted">Cargando...</li>
+    </ul>
+      </main>
+    </div>
+
+    <div class="offcanvas offcanvas-start domus-sidebar-offcanvas d-md-none" tabindex="-1" id="sidebarOffcanvas">
+      <div class="offcanvas-header">
+        <span class="domus-sidebar-brand mb-0">🏠 Domus</span>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <div class="offcanvas-body d-flex flex-column">
+        <nav class="domus-sidebar-nav flex-grow-1">
+          <a href="dashboard.html" class="domus-sidebar-link">🏠 Inicio</a>
+          <a href="mercado.html" class="domus-sidebar-link">🛒 Mercado</a>
+          <a href="gastos.html" class="domus-sidebar-link">💰 Gastos</a>
+          <a href="servicios.html" class="domus-sidebar-link active">🧾 Servicios</a>
+          <a href="miembros.html" class="domus-sidebar-link">👥 Miembros</a>
+          <a href="hogares.html" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
+          <a href="perfil.html" class="domus-sidebar-link">⚙️ Mi perfil</a>
+        </nav>
+        <button id="btn-salir-movil" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: agregar servicio -->
+  <div class="modal fade" id="modal-nuevo-servicio" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form-nuevo-servicio">
+          <div class="modal-header">
+            <h5 class="modal-title">Agregar servicio</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-servicio"></div>
+            <div class="mb-3">
+              <label for="servicio-nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="servicio-nombre" placeholder="Ej. Internet, Arriendo..." required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="servicio-monto" class="form-label">Monto</label>
+                <input type="number" min="0.01" step="100" class="form-control" id="servicio-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="servicio-vencimiento" class="form-label">Fecha de vencimiento</label>
+                <input type="date" class="form-control" id="servicio-vencimiento" required />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="servicio-categoria" class="form-label">Categoría</label>
+              <select id="servicio-categoria" class="form-select"></select>
+            </div>
+            <div class="mb-3">
+              <label for="servicio-observaciones" class="form-label">Observaciones (opcional)</label>
+              <textarea id="servicio-observaciones" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-agregar-servicio" class="btn btn-domus-primary">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: marcar como pagado (con comprobante opcional) -->
+  <div class="modal fade" id="modal-pagar-servicio" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form-pagar-servicio">
+          <div class="modal-header">
+            <h5 class="modal-title">Marcar "<span id="pagar-nombre-servicio"></span>" como pagado</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-pagar"></div>
+            <label for="pagar-comprobante" class="form-label">Comprobante (opcional)</label>
+            <input type="file" class="form-control" id="pagar-comprobante" accept="image/*,.pdf" />
+            <div class="form-text">Foto o PDF de la factura. Puedes agregarlo después si no lo tienes a la mano.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-confirmar-pago" class="btn btn-domus-primary">Confirmar pago</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: adjuntar/reemplazar comprobante de un pago ya hecho -->
+  <div class="modal fade" id="modal-adjuntar-comprobante" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form-adjuntar-comprobante">
+          <div class="modal-header">
+            <h5 class="modal-title">Adjuntar comprobante</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-adjuntar"></div>
+            <input type="file" class="form-control" id="adjuntar-comprobante" accept="image/*,.pdf" required />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-comprobante" class="btn btn-domus-primary">Subir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { protegerPagina, cerrarSesion } from './js/auth.js';
+    import { obtenerHogarActivoValidado } from './js/hogares.js';
+    import {
+      listarServicios,
+      agregarServicio,
+      marcarPagado,
+      reabrirServicio,
+      eliminarServicio,
+      subirComprobante,
+      obtenerUrlComprobante,
+      calcularResumenServicios,
+      CATEGORIAS,
+      etiquetaCategoria,
+    } from './js/servicios.js';
+    import { mostrarMensaje, limpiarMensaje, alternarCargando, formatearMoneda } from './js/ui.js';
+
+    let hogarActivo = null;
+    let servicios = [];
+    let vistaActual = 'pendiente';
+    let servicioIdParaPagar = null;
+    let servicioIdParaAdjuntar = null;
+
+    async function salir() {
+      await cerrarSesion();
+      window.location.href = 'index.html';
+    }
+    document.getElementById('btn-salir').addEventListener('click', salir);
+    document.getElementById('btn-salir-movil').addEventListener('click', salir);
+
+    llenarSelects();
+
+    const sesion = await protegerPagina();
+    if (sesion) {
+      hogarActivo = await obtenerHogarActivoValidado();
+      if (!hogarActivo) {
+        window.location.href = 'hogares.html';
+      } else {
+        document.getElementById('nombre-hogar').textContent = hogarActivo.nombre;
+        await cargarServicios();
+      }
+    }
+
+    function llenarSelects() {
+      document.getElementById('servicio-categoria').innerHTML = CATEGORIAS.map(
+        (c) => `<option value="${c.valor}">${c.etiqueta}</option>`
+      ).join('');
+    }
+
+    async function cargarServicios() {
+      const lista = document.getElementById('lista-servicios');
+      try {
+        servicios = await listarServicios(hogarActivo.id);
+        pintarResumen();
+        pintarLista();
+      } catch (error) {
+        lista.innerHTML = '';
+        mostrarMensaje('mensaje', 'No se pudo cargar los servicios: ' + error.message);
+      }
+    }
+
+    function pintarResumen() {
+      const r = calcularResumenServicios(servicios);
+      document.getElementById('stat-pendientes').textContent = r.countPendientes;
+      document.getElementById('stat-total-pendiente').textContent = formatearMoneda(r.totalPendiente);
+      document.getElementById('stat-pagados-mes').textContent = r.countPagadosMes;
+      document.getElementById('stat-proximo').textContent = r.proximoPago
+        ? `${r.proximoPago.nombre} · ${formatearFecha(r.proximoPago.fecha_vencimiento)}`
+        : 'Sin pendientes';
+
+      const pendientes = servicios.filter((s) => s.estado === 'pendiente').length;
+      const pagados = servicios.filter((s) => s.estado === 'pagado').length;
+      document.getElementById('badge-pendientes').textContent = pendientes;
+      document.getElementById('badge-pagados').textContent = pagados;
+
+      limpiarMensaje('mensaje');
+      if (r.countVencidos > 0) {
+        mostrarMensaje(
+          'mensaje',
+          `⚠️ Tienes ${r.countVencidos} servicio(s) vencido(s) sin pagar.`,
+          'danger'
+        );
+      }
+    }
+
+    function formatearFecha(fechaIso) {
+      return new Date(fechaIso + 'T00:00:00').toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+
+    function pintarLista() {
+      const lista = document.getElementById('lista-servicios');
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const visibles = servicios.filter((s) => s.estado === vistaActual);
+
+      if (visibles.length === 0) {
+        lista.innerHTML = `<li class="list-group-item text-muted">
+          ${vistaActual === 'pendiente' ? 'No hay servicios pendientes.' : 'Todavía no hay pagos registrados.'}
+        </li>`;
+        return;
+      }
+
+      lista.innerHTML = visibles.map((s) => filaServicio(s, hoy)).join('');
+
+      lista.querySelectorAll('[data-pagar]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalPagar(boton.dataset.pagar, boton.dataset.nombre));
+      });
+      lista.querySelectorAll('[data-reabrir]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            await reabrirServicio(boton.dataset.reabrir);
+            await cargarServicios();
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo reabrir el pago: ' + error.message);
+          }
+        });
+      });
+      lista.querySelectorAll('[data-eliminar]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este servicio?')) return;
+          try {
+            await eliminarServicio(boton.dataset.eliminar);
+            await cargarServicios();
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo eliminar: ' + error.message);
+          }
+        });
+      });
+      lista.querySelectorAll('[data-adjuntar]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+          servicioIdParaAdjuntar = boton.dataset.adjuntar;
+          document.getElementById('form-adjuntar-comprobante').reset();
+          limpiarMensaje('mensaje-modal-adjuntar');
+          new bootstrap.Modal(document.getElementById('modal-adjuntar-comprobante')).show();
+        });
+      });
+      lista.querySelectorAll('[data-ver-comprobante]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            const url = await obtenerUrlComprobante(boton.dataset.verComprobante);
+            window.open(url, '_blank', 'noopener');
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo abrir el comprobante: ' + error.message);
+          }
+        });
+      });
+    }
+
+    function filaServicio(s, hoy) {
+      const vencido = s.estado === 'pendiente' && new Date(s.fecha_vencimiento + 'T00:00:00') < hoy;
+      const quienRegistro = s.registrado_por_perfil?.nombre_completo || s.registrado_por_perfil?.email || '—';
+      const quienPago = s.pagado_por_perfil?.nombre_completo || s.pagado_por_perfil?.email;
+
+      const infoSecundaria =
+        s.estado === 'pendiente'
+          ? `Vence ${formatearFecha(s.fecha_vencimiento)} · Registrado por ${escapeHtml(quienRegistro)}`
+          : `Pagado ${formatearFecha(s.fecha_pago)} por ${escapeHtml(quienPago || '—')}`;
+
+      const comprobanteBtn = s.comprobante_path
+        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante="${s.comprobante_path}">📄 Ver comprobante</button>`
+        : s.estado === 'pagado'
+        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar="${s.id}">📎 Adjuntar</button>`
+        : '';
+
+      const acciones =
+        s.estado === 'pendiente'
+          ? `<button class="btn btn-sm btn-domus-primary" data-pagar="${s.id}" data-nombre="${escapeHtml(s.nombre)}">Marcar pagado</button>
+             <button class="btn btn-sm btn-outline-danger" data-eliminar="${s.id}">Eliminar</button>`
+          : `${comprobanteBtn}
+             <button class="btn btn-sm btn-outline-secondary" data-reabrir="${s.id}">Reabrir</button>
+             <button class="btn btn-sm btn-outline-danger" data-eliminar="${s.id}">Eliminar</button>`;
+
+      return `
+        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <div>
+              <strong>${escapeHtml(s.nombre)}</strong>
+              <span class="badge text-bg-light border ms-1">${escapeHtml(etiquetaCategoria(s.categoria))}</span>
+              ${vencido ? '<span class="badge text-bg-danger ms-1">Vencido</span>' : ''}
+            </div>
+            <small class="text-muted">${infoSecundaria}</small>
+            ${s.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(s.observaciones)}</div>` : ''}
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="fw-semibold">${formatearMoneda(s.monto)}</span>
+            ${acciones}
+          </div>
+        </li>`;
+    }
+
+    document.querySelectorAll('#tabs-servicios [data-vista]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        vistaActual = boton.dataset.vista;
+        document.querySelectorAll('#tabs-servicios .nav-link').forEach((b) => b.classList.remove('active'));
+        boton.classList.add('active');
+        pintarLista();
+      });
+    });
+
+    document.getElementById('form-nuevo-servicio').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-servicio');
+
+      const nombre = document.getElementById('servicio-nombre').value.trim();
+      const monto = Number(document.getElementById('servicio-monto').value);
+      const fechaVencimiento = document.getElementById('servicio-vencimiento').value;
+      const categoria = document.getElementById('servicio-categoria').value;
+      const observaciones = document.getElementById('servicio-observaciones').value.trim();
+
+      alternarCargando('btn-agregar-servicio', true);
+      try {
+        await agregarServicio(hogarActivo.id, { nombre, monto, fechaVencimiento, categoria, observaciones });
+        document.getElementById('form-nuevo-servicio').reset();
+        llenarSelects();
+        bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-servicio'))?.hide();
+        await cargarServicios();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-servicio', 'No se pudo agregar el servicio: ' + error.message);
+      } finally {
+        alternarCargando('btn-agregar-servicio', false, 'Agregar');
+      }
+    });
+
+    function abrirModalPagar(servicioId, nombre) {
+      servicioIdParaPagar = servicioId;
+      document.getElementById('pagar-nombre-servicio').textContent = nombre;
+      document.getElementById('form-pagar-servicio').reset();
+      limpiarMensaje('mensaje-modal-pagar');
+      new bootstrap.Modal(document.getElementById('modal-pagar-servicio')).show();
+    }
+
+    document.getElementById('form-pagar-servicio').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-pagar');
+      const archivo = document.getElementById('pagar-comprobante').files[0];
+
+      alternarCargando('btn-confirmar-pago', true);
+      try {
+        await marcarPagado(servicioIdParaPagar);
+        if (archivo) {
+          await subirComprobante(hogarActivo.id, servicioIdParaPagar, archivo);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('modal-pagar-servicio'))?.hide();
+        await cargarServicios();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-pagar', 'No se pudo registrar el pago: ' + error.message);
+      } finally {
+        alternarCargando('btn-confirmar-pago', false, 'Confirmar pago');
+      }
+    });
+
+    document.getElementById('form-adjuntar-comprobante').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-adjuntar');
+      const archivo = document.getElementById('adjuntar-comprobante').files[0];
+      if (!archivo) return;
+
+      alternarCargando('btn-guardar-comprobante', true);
+      try {
+        await subirComprobante(hogarActivo.id, servicioIdParaAdjuntar, archivo);
+        bootstrap.Modal.getInstance(document.getElementById('modal-adjuntar-comprobante'))?.hide();
+        await cargarServicios();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-adjuntar', 'No se pudo subir el comprobante: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-comprobante', false, 'Subir');
+      }
+    });
+
+    function escapeHtml(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto ?? '';
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
