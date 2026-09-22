@@ -4,7 +4,7 @@
 // solo se intercepta lo que es del mismo origen (HTML/CSS/JS/íconos).
 // ============================================================================
 
-const VERSION = 'domus-v2';
+const VERSION = 'domus-v4';
 const CACHE_SHELL = `${VERSION}-shell`;
 
 const ARCHIVOS_SHELL = [
@@ -18,6 +18,7 @@ const ARCHIVOS_SHELL = [
   './miembros.html',
   './perfil.html',
   './mercado.html',
+  './gastos.html',
   './manifest.json',
   './css/styles.css',
   './js/config.js',
@@ -25,6 +26,7 @@ const ARCHIVOS_SHELL = [
   './js/auth.js',
   './js/hogares.js',
   './js/mercado.js',
+  './js/gastos.js',
   './js/ui.js',
   './icons/icon-192.png',
   './icons/icon-512.png',

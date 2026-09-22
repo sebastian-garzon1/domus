@@ -11,5 +11,6 @@
 // cualquier tabla; con ellas, cada usuario solo puede tocar sus propios hogares.
 // ============================================================================
 
-export const SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
-export const SUPABASE_ANON_KEY = 'TU-ANON-KEY-AQUI';
+export const SUPABASE_URL = 'https://xnklugxabkemaurpoptc.supabase.co';
+export const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhua2x1Z3hhYmtlbWF1cnBvcHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MzY3NzcsImV4cCI6MjEwMTAxMjc3N30.thbots9nR-9R2cR62rmxDt86_msJXEu4MGJkDNDzHzg';

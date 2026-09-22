@@ -1,13 +1,16 @@
 # Domus — Administración inteligente del hogar
 
 Base sólida inicial: estructura del proyecto, autenticación, modelo de datos
-de **hogares** y **Row Level Security**, más el primer módulo funcional:
-**mercado y lista de compras**. Los módulos de gastos, servicios, calendario,
+de **hogares** y **Row Level Security**, más dos módulos funcionales:
+**mercado y lista de compras** y **gastos y presupuesto mensual**. Interfaz
+con tema oscuro y navegación lateral. Los módulos de servicios, calendario,
 etc. se agregan de forma incremental sobre esta base.
 
 ## Qué incluye esta versión
 
 - PWA instalable (HTML5 + Bootstrap 5 + JS moderno, sin frameworks ni build step).
+- Interfaz con tema oscuro y navegación lateral (sidebar en desktop, menú
+  deslizable en móvil).
 - Registro, inicio de sesión, cerrar sesión y recuperación de contraseña (Supabase Auth).
 - Crear hogares, pertenecer a varios a la vez, cambiar de hogar activo.
 - Invitar miembros por correo (con roles: administrador / miembro / invitado).
@@ -15,14 +18,19 @@ etc. se agregan de forma incremental sobre esta base.
   cantidad, unidad, prioridad, precio estimado, observaciones), marcarlos como
   comprados (con precio final y quién los compró), reabrirlos, historial de
   comprados y totales automáticos (por comprar / gastado en el mes).
+- **Gastos y presupuesto mensual**: registrar gastos (descripción, categoría,
+  monto, método de pago, fecha, observaciones), historial completo, y un
+  resumen del mes con barra de progreso y alertas visuales al acercarse
+  (80%) o superar el presupuesto mensual del hogar.
 - Base de datos Postgres con **Row Level Security**: cada usuario solo puede
   ver o modificar datos de los hogares a los que pertenece, verificado en la
   base de datos (no solo en el navegador).
-- Todo el esquema SQL (`sql/001_init.sql`, `sql/002_mercado.sql`) fue probado
-  de punta a punta en un motor Postgres real antes de entregarse: creación de
-  hogares, aislamiento entre hogares, invitaciones a usuarios existentes y no
-  registrados, permisos de admin vs. miembro, CRUD y aislamiento del mercado,
-  imposibilidad de falsificar autoría, restricciones de datos, etc.
+- Todo el esquema SQL (`sql/001_init.sql`, `sql/002_mercado.sql`,
+  `sql/003_gastos.sql`) fue probado de punta a punta en un motor Postgres real
+  antes de entregarse: creación de hogares, aislamiento entre hogares,
+  invitaciones a usuarios existentes y no registrados, permisos de admin vs.
+  miembro, CRUD y aislamiento de mercado y gastos, imposibilidad de falsificar
+  autoría, restricciones de datos, etc.
 
 ## 1. Crear el proyecto en Supabase
 
@@ -35,11 +43,13 @@ etc. se agregan de forma incremental sobre esta base.
 1. En el dashboard de Supabase: **SQL Editor → New query**.
 2. Pega **todo** el contenido de [`sql/001_init.sql`](sql/001_init.sql) y dale **Run**.
 3. Repite con [`sql/002_mercado.sql`](sql/002_mercado.sql) (en una consulta nueva, después del anterior).
-4. Deberías ver `Success. No rows returned` en cada uno. Si algo falla, el error indica la línea exacta — puedes volver a correr cualquiera de los dos scripts completos las veces que necesites, están escritos para ser seguros de re-ejecutar.
+4. Repite con [`sql/003_gastos.sql`](sql/003_gastos.sql).
+5. Deberías ver `Success. No rows returned` en cada uno. Si algo falla, el error indica la línea exacta — puedes volver a correr cualquiera de los scripts completos las veces que necesites, están escritos para ser seguros de re-ejecutar.
 
 `001_init.sql` crea las tablas `profiles`, `hogares`, `hogar_miembros`,
 `invitaciones`, las funciones de apoyo y sus políticas de RLS. `002_mercado.sql`
-agrega la tabla `mercado_items` (lista de compras) con su propia RLS.
+agrega la tabla `mercado_items` (lista de compras). `003_gastos.sql` agrega la
+tabla `gastos` (registro de gastos generales). Ambas con su propia RLS.
 
 ## 3. Configurar Authentication
 
@@ -110,30 +120,33 @@ domus/
 ├── miembros.html          Ver e invitar miembros del hogar activo
 ├── perfil.html             Editar nombre del perfil
 ├── mercado.html            Mercado y lista de compras del hogar activo
+├── gastos.html             Gastos y presupuesto mensual del hogar activo
 ├── manifest.json           Configuración PWA
 ├── sw.js                   Service worker (cachea el app shell)
-├── css/styles.css
+├── css/styles.css          Tema oscuro + layout de sidebar/offcanvas
 ├── js/
 │   ├── config.js            ← credenciales de Supabase (editar aquí)
 │   ├── supabaseClient.js
 │   ├── auth.js
 │   ├── hogares.js
 │   ├── mercado.js
+│   ├── gastos.js
 │   ├── ui.js
 │   └── register-sw.js
 ├── icons/                   Íconos PWA (192, 512, maskable)
 └── sql/
     ├── 001_init.sql         Perfiles, hogares, membresías, invitaciones + RLS
-    └── 002_mercado.sql      Mercado y lista de compras + RLS
+    ├── 002_mercado.sql      Mercado y lista de compras + RLS
+    └── 003_gastos.sql       Gastos y presupuesto mensual + RLS
 ```
 
 ## Próximos módulos
 
-Siguiendo el mismo patrón (`sql/003_*.sql`, `004_*.sql`, ...), cada uno con
+Siguiendo el mismo patrón (`sql/004_*.sql`, `005_*.sql`, ...), cada uno con
 su tabla, índices y política RLS basada en `is_hogar_member(hogar_id)`:
 
 1. ~~Mercado y lista de compras~~ ✅
-2. Gastos + presupuesto mensual
+2. ~~Gastos + presupuesto mensual~~ ✅
 3. Servicios y pagos recurrentes (+ comprobantes en Supabase Storage)
 4. Calendario compartido
 5. Inventario del hogar

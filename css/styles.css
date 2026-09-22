@@ -1,18 +1,48 @@
 /* ============================================================================
-   DOMUS — Estilos compartidos (encima de Bootstrap 5)
+   DOMUS — Estilos compartidos (encima de Bootstrap 5, tema oscuro tipo GitHub)
+   Cada página activa el tema oscuro nativo de Bootstrap con
+   <html data-bs-theme="dark">; aquí solo afinamos los tokens de color y
+   agregamos el layout de sidebar/offcanvas que no trae Bootstrap.
    ============================================================================ */
 
 :root {
-  --domus-primary: #2f5d50;   /* verde hogar, cálido */
-  --domus-primary-dark: #234a3f;
-  --domus-accent: #d98e04;    /* acento cálido para alertas/destacados */
-  --domus-bg: #f7f5f0;
+  --domus-bg: #0d1117;              /* fondo de página */
+  --domus-bg-inset: #010409;        /* sidebar / topbar móvil (más oscuro) */
+  --domus-surface: #161b22;         /* tarjetas, modales, list-group */
+  --domus-surface-hover: #1c2430;
+  --domus-border: #30363d;
+  --domus-text: #e6edf3;
+  --domus-text-muted: #8b949e;
+
+  --domus-primary: #238636;         /* verde para botones (contraste con blanco) */
+  --domus-primary-hover: #2ea043;
+  --domus-primary-text: #3fb950;    /* verde más claro para texto/acentos sobre fondo oscuro */
+  --domus-primary-soft: rgba(63, 185, 80, 0.15);
+  --domus-accent: #d29922;          /* ámbar para prioridades/alertas */
+}
+
+/* Alinea las variables de Bootstrap con la paleta oscura de Domus */
+[data-bs-theme='dark'] {
+  --bs-body-bg: var(--domus-bg);
+  --bs-body-color: var(--domus-text);
+  --bs-border-color: var(--domus-border);
+  --bs-card-bg: var(--domus-surface);
+  --bs-tertiary-bg: var(--domus-surface);
+  --bs-secondary-bg: var(--domus-surface);
+  --bs-emphasis-color: #ffffff;
 }
 
 body {
   background-color: var(--domus-bg);
+  color: var(--domus-text);
   min-height: 100vh;
 }
+
+a {
+  color: var(--domus-primary-text);
+}
+
+/* --- Páginas de autenticación (login, registro, recuperar) ---------------- */
 
 .domus-auth-shell {
   min-height: 100vh;
@@ -25,11 +55,12 @@ body {
 .domus-auth-card {
   width: 100%;
   max-width: 420px;
+  border: 1px solid var(--domus-border);
 }
 
 .domus-logo {
   font-weight: 700;
-  color: var(--domus-primary);
+  color: var(--domus-primary-text);
   letter-spacing: -0.02em;
 }
 
@@ -40,36 +71,128 @@ body {
 }
 .btn-domus-primary:hover,
 .btn-domus-primary:focus {
-  background-color: var(--domus-primary-dark);
-  border-color: var(--domus-primary-dark);
+  background-color: var(--domus-primary-hover);
+  border-color: var(--domus-primary-hover);
   color: #fff;
 }
 
-.navbar-domus {
-  background-color: var(--domus-primary);
-}
-.navbar-domus .navbar-brand,
-.navbar-domus .nav-link {
-  color: #fff !important;
+/* --- Shell de la app: sidebar fija (desktop) + topbar/offcanvas (móvil) --- */
+
+.domus-app-shell {
+  display: flex;
+  min-height: 100vh;
 }
 
+.domus-content-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.domus-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background-color: var(--domus-bg-inset);
+  border-right: 1px solid var(--domus-border);
+  padding: 1.25rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.domus-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--domus-text) !important;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+}
+
+.domus-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.domus-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--domus-text-muted);
+  text-decoration: none;
+  font-size: 0.925rem;
+}
+.domus-sidebar-link:hover {
+  background-color: var(--domus-surface-hover);
+  color: var(--domus-text);
+}
+.domus-sidebar-link.active {
+  background-color: var(--domus-primary-soft);
+  color: var(--domus-primary-text);
+  font-weight: 600;
+}
+
+.domus-topbar-mobile {
+  background-color: var(--domus-bg-inset);
+  border-bottom: 1px solid var(--domus-border);
+  padding: 0.65rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.domus-sidebar-offcanvas {
+  background-color: var(--domus-bg-inset);
+  border-right: 1px solid var(--domus-border);
+  width: 260px;
+}
+
+.domus-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2rem;
+}
+@media (max-width: 767.98px) {
+  .domus-main {
+    padding: 1.25rem;
+  }
+}
+
+/* --- Tarjetas y componentes reutilizables ---------------------------------- */
+
 .domus-stat-card {
-  border: none;
+  border: 1px solid var(--domus-border);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background-color: var(--domus-surface);
 }
 
 .domus-hogar-card {
+  border: 1px solid var(--domus-border);
+  background-color: var(--domus-surface);
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 .domus-hogar-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--domus-primary-text);
   transform: translateY(-2px);
 }
 
 .domus-modulo-pendiente {
-  border: 2px dashed #d0cabb;
+  border: 1px dashed var(--domus-border);
   border-radius: 0.75rem;
-  color: #8a8272;
+  color: var(--domus-text-muted);
+  background-color: var(--domus-surface);
+}
+
+.list-group-item {
+  background-color: var(--domus-surface);
+  border-color: var(--domus-border);
+  color: var(--domus-text);
 }
