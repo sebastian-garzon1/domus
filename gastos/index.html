@@ -93,6 +93,9 @@
       <li class="nav-item">
         <button class="nav-link" data-vista="calendario" type="button">📅 Calendario</button>
       </li>
+      <li class="nav-item">
+        <button class="nav-link" data-vista="categorias" type="button">🥧 Por categoría</button>
+      </li>
     </ul>
 
     <div id="vista-lista">
@@ -147,6 +150,29 @@
       </div>
       <div id="calendario-grid" class="domus-calendario-grid mb-3"></div>
       <div id="calendario-detalle-dia"></div>
+    </div>
+
+    <div id="vista-categorias" style="display: none;">
+      <div class="card domus-stat-card p-2 mb-3 d-flex flex-row align-items-center justify-content-between">
+        <button id="btn-categorias-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+        <strong id="categorias-titulo-mes">—</strong>
+        <button id="btn-categorias-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+      </div>
+      <div id="categorias-vacio" class="text-muted text-center py-4" style="display: none;">
+        No hay gastos pagados este mes todavía.
+      </div>
+      <div id="categorias-contenido" class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="card domus-stat-card p-3">
+            <canvas id="grafica-categorias" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div id="categoria-seleccion" class="card domus-stat-card p-4 text-center h-100 d-flex flex-column justify-content-center">
+            <span class="text-muted small">Toca una porción de la torta para ver el valor</span>
+          </div>
+        </div>
+      </div>
     </div>
       </main>
     </div>
@@ -395,6 +421,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script type="module">
     import { protegerPagina, cerrarSesion } from '../js/auth.js';
     import { obtenerHogarActivoValidado } from '../js/hogares.js';
@@ -444,6 +471,7 @@
     mesLista.setDate(1);
     let filtroEstado = 'todos';
     let filtroTipo = 'todos';
+    let graficaCategorias = null;
 
     async function salir() {
       await cerrarSesion();
@@ -932,6 +960,95 @@
       conectarAccionesFila(contenedor);
     }
 
+    // --- Gráfica de gastos por categoría (torta) ------------------------------
+
+    // Color fijo por categoría (no por posición), para que cada categoría
+    // conserve siempre su mismo color sin importar cuáles aparezcan un mes.
+    // Paleta categórica validada para fondo oscuro (ver skill de dataviz).
+    const COLOR_POR_CATEGORIA = {
+      mercado: '#3987e5',
+      servicios: '#d95926',
+      transporte: '#199e70',
+      salud: '#c98500',
+      educacion: '#d55181',
+      entretenimiento: '#008300',
+      hogar: '#9085e9',
+      mascotas: '#e66767',
+      otros: '#898781',
+    };
+
+    function renderGraficaCategorias() {
+      document.getElementById('categorias-titulo-mes').textContent = mesLista.toLocaleDateString('es-CO', {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const pagadosDelMes = gastosDelMes(mesLista).filter((g) => g.estado === 'pagado');
+      const porCategoria = {};
+      for (const g of pagadosDelMes) {
+        porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + Number(g.monto);
+      }
+      const categoriasConGasto = Object.keys(porCategoria).sort((a, b) => porCategoria[b] - porCategoria[a]);
+      const total = categoriasConGasto.reduce((suma, c) => suma + porCategoria[c], 0);
+
+      document.getElementById('categorias-vacio').style.display = categoriasConGasto.length === 0 ? '' : 'none';
+      document.getElementById('categorias-contenido').style.display = categoriasConGasto.length === 0 ? 'none' : '';
+      if (categoriasConGasto.length === 0) {
+        if (graficaCategorias) {
+          graficaCategorias.destroy();
+          graficaCategorias = null;
+        }
+        return;
+      }
+
+      const seleccion = document.getElementById('categoria-seleccion');
+      function mostrarSeleccion(categoria) {
+        const monto = porCategoria[categoria];
+        const porcentaje = total > 0 ? ((monto / total) * 100).toFixed(0) : 0;
+        seleccion.innerHTML = `
+          <span class="text-muted small">${escapeHtml(etiquetaCategoria(categoria))}</span>
+          <span class="h3 mb-0 mt-1">${formatearMoneda(monto)}</span>
+          <span class="text-muted small mt-1">${porcentaje}% del mes</span>`;
+      }
+
+      const ctx = document.getElementById('grafica-categorias');
+      const data = {
+        labels: categoriasConGasto.map(etiquetaCategoria),
+        datasets: [{
+          data: categoriasConGasto.map((c) => porCategoria[c]),
+          backgroundColor: categoriasConGasto.map((c) => COLOR_POR_CATEGORIA[c] || COLOR_POR_CATEGORIA.otros),
+          borderColor: '#262a34',
+          borderWidth: 2,
+        }],
+      };
+
+      if (graficaCategorias) {
+        graficaCategorias.data = data;
+        graficaCategorias.update();
+      } else {
+        graficaCategorias = new Chart(ctx, {
+          type: 'doughnut',
+          data,
+          options: {
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#e6edf3', boxWidth: 14, padding: 12 } },
+              tooltip: {
+                callbacks: {
+                  label: (item) => `${item.label}: ${formatearMoneda(item.raw)}`,
+                },
+              },
+            },
+            onClick: (evento, elementos) => {
+              if (!elementos.length) return;
+              mostrarSeleccion(categoriasConGasto[elementos[0].index]);
+            },
+          },
+        });
+      }
+
+      mostrarSeleccion(categoriasConGasto[0]);
+    }
+
     // --- Tabs ----------------------------------------------------------------
 
     document.querySelectorAll('#tabs-gastos [data-vista]').forEach((boton) => {
@@ -943,10 +1060,12 @@
         document.getElementById('vista-lista').style.display = vistaActual === 'lista' ? '' : 'none';
         document.getElementById('vista-recurrentes').style.display = vistaActual === 'recurrentes' ? '' : 'none';
         document.getElementById('vista-calendario').style.display = vistaActual === 'calendario' ? '' : 'none';
+        document.getElementById('vista-categorias').style.display = vistaActual === 'categorias' ? '' : 'none';
 
         if (vistaActual === 'lista') pintarLista();
         else if (vistaActual === 'recurrentes') pintarRecurrentes();
-        else renderCalendario();
+        else if (vistaActual === 'calendario') renderCalendario();
+        else renderGraficaCategorias();
       });
     });
 
@@ -957,6 +1076,15 @@
     document.getElementById('btn-lista-mes-siguiente').addEventListener('click', () => {
       mesLista.setMonth(mesLista.getMonth() + 1);
       pintarLista();
+    });
+
+    document.getElementById('btn-categorias-mes-anterior').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() - 1);
+      renderGraficaCategorias();
+    });
+    document.getElementById('btn-categorias-mes-siguiente').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() + 1);
+      renderGraficaCategorias();
     });
 
     document.querySelectorAll('#filtro-estado [data-estado]').forEach((boton) => {

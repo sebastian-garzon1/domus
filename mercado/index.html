@@ -86,6 +86,12 @@
       </li>
     </ul>
 
+    <div id="nav-mes-comprados" class="card domus-stat-card p-2 mb-3 d-flex flex-row align-items-center justify-content-between" style="display: none;">
+      <button id="btn-lista-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+      <strong id="lista-titulo-mes">—</strong>
+      <button id="btn-lista-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+    </div>
+
     <ul id="lista-items" class="list-group">
       <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
     </ul>
@@ -218,6 +224,8 @@
     let items = [];
     let vistaActual = 'pendiente';
     let itemIdParaComprar = null;
+    let mesLista = new Date();
+    mesLista.setDate(1);
 
     async function salir() {
       await cerrarSesion();
@@ -282,11 +290,28 @@
 
     function pintarLista() {
       const lista = document.getElementById('lista-items');
-      const visibles = items.filter((i) => i.estado === vistaActual);
+      const esComprados = vistaActual === 'comprado';
+      document.getElementById('nav-mes-comprados').style.display = esComprados ? '' : 'none';
+
+      let visibles = items.filter((i) => i.estado === vistaActual);
+
+      if (esComprados) {
+        document.getElementById('lista-titulo-mes').textContent = mesLista.toLocaleDateString('es-CO', {
+          month: 'long',
+          year: 'numeric',
+        });
+        const anio = mesLista.getFullYear();
+        const mes = mesLista.getMonth();
+        visibles = visibles.filter((i) => {
+          if (!i.comprado_en) return false;
+          const f = new Date(i.comprado_en);
+          return f.getFullYear() === anio && f.getMonth() === mes;
+        });
+      }
 
       if (visibles.length === 0) {
         lista.innerHTML = `<li class="list-group-item text-muted">
-          ${vistaActual === 'pendiente' ? 'No hay ítems pendientes. ¡Agrega el primero!' : 'Todavía no hay ítems comprados.'}
+          ${vistaActual === 'pendiente' ? 'No hay ítems pendientes. ¡Agrega el primero!' : 'No hay ítems comprados este mes.'}
         </li>`;
         return;
       }
@@ -364,6 +389,15 @@
         boton.classList.add('active');
         pintarLista();
       });
+    });
+
+    document.getElementById('btn-lista-mes-anterior').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() - 1);
+      pintarLista();
+    });
+    document.getElementById('btn-lista-mes-siguiente').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() + 1);
+      pintarLista();
     });
 
     document.getElementById('form-nuevo-item').addEventListener('submit', async (evento) => {
