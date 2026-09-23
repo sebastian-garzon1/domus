@@ -74,7 +74,7 @@
 
   <!-- Modal: crear hogar -->
   <div class="modal fade" id="modal-nuevo-hogar" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-nuevo-hogar">
           <div class="modal-header">
@@ -93,7 +93,7 @@
             </div>
             <div class="mb-3">
               <label for="presupuesto-hogar" class="form-label">Presupuesto mensual (opcional)</label>
-              <input type="number" min="0" step="1000" class="form-control" id="presupuesto-hogar" placeholder="0" />
+              <input type="text" inputmode="numeric" class="form-control" id="presupuesto-hogar" placeholder="0" />
             </div>
           </div>
           <div class="modal-footer">
@@ -109,7 +109,9 @@
   <script type="module">
     import { protegerPagina, cerrarSesion } from './js/auth.js';
     import { listarMisHogares, crearHogar, fijarHogarActivo } from './js/hogares.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando } from './js/ui.js';
+    import { mostrarMensaje, limpiarMensaje, alternarCargando, activarFormatoMiles, obtenerValorNumerico } from './js/ui.js';
+
+    activarFormatoMiles(document.getElementById('presupuesto-hogar'));
 
     const sesion = await protegerPagina();
     if (sesion) await cargarHogares();
@@ -163,7 +165,7 @@
       limpiarMensaje('mensaje-modal');
       const nombre = document.getElementById('nombre-hogar').value.trim();
       const descripcion = document.getElementById('descripcion-hogar').value.trim();
-      const presupuesto = Number(document.getElementById('presupuesto-hogar').value || 0);
+      const presupuesto = obtenerValorNumerico(document.getElementById('presupuesto-hogar'));
 
       alternarCargando('btn-crear-hogar', true);
       try {
@@ -177,9 +179,9 @@
     });
 
     function escapeHtml(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto;
-      return div.innerHTML;
+      return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
     }
   </script>
 </body>

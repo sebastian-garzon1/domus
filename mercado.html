@@ -115,7 +115,7 @@
 
   <!-- Modal: agregar ítem -->
   <div class="modal fade" id="modal-nuevo-item" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-nuevo-item">
           <div class="modal-header">
@@ -150,7 +150,7 @@
             </div>
             <div class="mb-3">
               <label for="item-precio-estimado" class="form-label">Precio estimado (opcional)</label>
-              <input type="number" min="0" step="100" class="form-control" id="item-precio-estimado" placeholder="0" />
+              <input type="text" inputmode="numeric" class="form-control" id="item-precio-estimado" placeholder="0" />
             </div>
             <div class="mb-3">
               <label for="item-observaciones" class="form-label">Observaciones (opcional)</label>
@@ -168,7 +168,7 @@
 
   <!-- Modal: marcar como comprado -->
   <div class="modal fade" id="modal-comprar-item" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-comprar-item">
           <div class="modal-header">
@@ -177,7 +177,7 @@
           </div>
           <div class="modal-body">
             <label for="comprar-precio-final" class="form-label">Precio final pagado (opcional)</label>
-            <input type="number" min="0" step="100" class="form-control" id="comprar-precio-final" placeholder="0" />
+            <input type="text" inputmode="numeric" class="form-control" id="comprar-precio-final" placeholder="0" />
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -205,7 +205,14 @@
       etiquetaCategoria,
       prioridadInfo,
     } from './js/mercado.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando, formatearMoneda } from './js/ui.js';
+    import {
+      mostrarMensaje,
+      limpiarMensaje,
+      alternarCargando,
+      formatearMoneda,
+      activarFormatoMiles,
+      obtenerValorNumerico,
+    } from './js/ui.js';
 
     let hogarActivo = null;
     let items = [];
@@ -218,6 +225,9 @@
     }
     document.getElementById('btn-salir').addEventListener('click', salir);
     document.getElementById('btn-salir-movil').addEventListener('click', salir);
+
+    activarFormatoMiles(document.getElementById('item-precio-estimado'));
+    activarFormatoMiles(document.getElementById('comprar-precio-final'));
 
     llenarSelects();
 
@@ -365,7 +375,7 @@
       const unidad = document.getElementById('item-unidad').value;
       const categoria = document.getElementById('item-categoria').value;
       const prioridad = document.getElementById('item-prioridad').value;
-      const precioEstimadoRaw = document.getElementById('item-precio-estimado').value;
+      const precioEstimado = obtenerValorNumerico(document.getElementById('item-precio-estimado'));
       const observaciones = document.getElementById('item-observaciones').value.trim();
 
       alternarCargando('btn-agregar-item', true);
@@ -376,7 +386,7 @@
           unidad,
           categoria,
           prioridad,
-          precioEstimado: precioEstimadoRaw ? Number(precioEstimadoRaw) : null,
+          precioEstimado: precioEstimado || null,
           observaciones,
         });
         document.getElementById('form-nuevo-item').reset();
@@ -399,11 +409,11 @@
 
     document.getElementById('form-comprar-item').addEventListener('submit', async (evento) => {
       evento.preventDefault();
-      const precioFinal = document.getElementById('comprar-precio-final').value;
+      const precioFinal = obtenerValorNumerico(document.getElementById('comprar-precio-final'));
 
       alternarCargando('btn-confirmar-compra', true);
       try {
-        await marcarComprado(itemIdParaComprar, precioFinal ? Number(precioFinal) : null);
+        await marcarComprado(itemIdParaComprar, precioFinal || null);
         bootstrap.Modal.getInstance(document.getElementById('modal-comprar-item'))?.hide();
         await cargarItems();
       } catch (error) {
@@ -414,9 +424,9 @@
     });
 
     function escapeHtml(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto ?? '';
-      return div.innerHTML;
+      return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
     }
   </script>
 </body>

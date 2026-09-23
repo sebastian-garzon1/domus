@@ -25,21 +25,29 @@ inventario y estadísticas se agregan de forma incremental sobre esta base.
   resumen del mes con barra de progreso y alertas visuales al acercarse
   (80%) o superar el presupuesto mensual del hogar.
 - **Servicios y pagos recurrentes**: registrar servicios (luz, agua,
-  internet, arriendo, etc.) con fecha de vencimiento, marcarlos como pagados
-  y adjuntar el comprobante (foto o PDF) en un bucket **privado** de Supabase
-  Storage — cada comprobante solo lo puede ver quien pertenece a ese hogar.
-  Aviso automático de servicios vencidos y próximo pago en el panel principal.
+  internet, arriendo, etc.) con fecha de vencimiento, número de referencia y
+  enlace de pago directo a la factura; marcarlos como pagados y adjuntar el
+  comprobante (foto o PDF) en un bucket **privado** de Supabase Storage; vista
+  de **calendario mensual** con los vencimientos resaltados por día. Aviso
+  automático de servicios vencidos y próximo pago en el panel principal.
+- **Gastos** también permiten adjuntar comprobante (mismo bucket privado).
+- **Mi perfil** ampliado: foto de perfil (bucket público `avatares`, cada
+  quien solo puede subir/editar la suya), teléfono, dirección y cambio de
+  contraseña, además del nombre.
+- Todos los campos de dinero (montos, presupuestos) usan formato de miles
+  mientras se escribe (`36000` → `36.000`).
 - Base de datos Postgres con **Row Level Security**: cada usuario solo puede
   ver o modificar datos de los hogares a los que pertenece, verificado en la
   base de datos (no solo en el navegador) — incluyendo los archivos de
   Storage, no solo las tablas.
-- Todo el esquema SQL (`sql/001_init.sql` a `sql/004_servicios.sql`) fue
-  probado de punta a punta en un motor Postgres real antes de entregarse:
+- Todo el esquema SQL (`sql/001_init.sql` a `sql/007_perfil_extendido.sql`)
+  fue probado de punta a punta en un motor Postgres real antes de entregarse:
   creación de hogares, aislamiento entre hogares, invitaciones a usuarios
   existentes y no registrados, permisos de admin vs. miembro, CRUD y
-  aislamiento de mercado/gastos/servicios, aislamiento de los comprobantes en
-  Storage por hogar, imposibilidad de falsificar autoría, restricciones de
-  datos, etc.
+  aislamiento de mercado/gastos/servicios, aislamiento de los comprobantes y
+  avatares en Storage, imposibilidad de falsificar autoría, restricciones de
+  datos (incluyendo que un enlace de pago no pueda usar un esquema como
+  `javascript:` en vez de `http(s)://`), etc.
 
 ## 1. Crear el proyecto en Supabase
 
@@ -54,14 +62,17 @@ inventario y estadísticas se agregan de forma incremental sobre esta base.
 3. Repite con [`sql/002_mercado.sql`](sql/002_mercado.sql) (en una consulta nueva, después del anterior).
 4. Repite con [`sql/003_gastos.sql`](sql/003_gastos.sql).
 5. Repite con [`sql/004_servicios.sql`](sql/004_servicios.sql) — este además crea el bucket privado `comprobantes` en Storage con sus propias políticas, no hace falta crearlo a mano desde la sección Storage del dashboard.
-6. Deberías ver `Success. No rows returned` en cada uno. Si algo falla, el error indica la línea exacta — puedes volver a correr cualquiera de los scripts completos las veces que necesites, están escritos para ser seguros de re-ejecutar.
+6. Repite con [`sql/005_servicios_referencia_pago.sql`](sql/005_servicios_referencia_pago.sql), [`sql/006_gastos_comprobante.sql`](sql/006_gastos_comprobante.sql) y [`sql/007_perfil_extendido.sql`](sql/007_perfil_extendido.sql) (este último crea también el bucket público `avatares`).
+7. Deberías ver `Success. No rows returned` en cada uno. Si algo falla, el error indica la línea exacta — puedes volver a correr cualquiera de los scripts completos las veces que necesites, están escritos para ser seguros de re-ejecutar.
 
 `001_init.sql` crea las tablas `profiles`, `hogares`, `hogar_miembros`,
 `invitaciones`, las funciones de apoyo y sus políticas de RLS. `002_mercado.sql`
 agrega la tabla `mercado_items` (lista de compras). `003_gastos.sql` agrega la
 tabla `gastos` (registro de gastos generales). `004_servicios.sql` agrega la
-tabla `servicios_pagos` y el bucket de Storage `comprobantes`. Todos con su
-propia RLS.
+tabla `servicios_pagos` y el bucket de Storage `comprobantes`. `005`-`007`
+agregan columnas y buckets adicionales sobre esa misma base (referencia/enlace
+de pago, comprobante de gastos, teléfono/dirección/foto de perfil). Todos con
+su propia RLS.
 
 ## 3. Configurar Authentication
 
@@ -149,10 +160,13 @@ domus/
 │   └── register-sw.js
 ├── icons/                   Íconos PWA (192, 512, maskable)
 └── sql/
-    ├── 001_init.sql         Perfiles, hogares, membresías, invitaciones + RLS
-    ├── 002_mercado.sql      Mercado y lista de compras + RLS
-    ├── 003_gastos.sql       Gastos y presupuesto mensual + RLS
-    └── 004_servicios.sql    Servicios, pagos + bucket "comprobantes" + RLS
+    ├── 001_init.sql                       Perfiles, hogares, membresías, invitaciones + RLS
+    ├── 002_mercado.sql                    Mercado y lista de compras + RLS
+    ├── 003_gastos.sql                     Gastos y presupuesto mensual + RLS
+    ├── 004_servicios.sql                  Servicios, pagos + bucket "comprobantes" + RLS
+    ├── 005_servicios_referencia_pago.sql  Número de referencia + enlace de pago
+    ├── 006_gastos_comprobante.sql         Comprobante adjunto en gastos
+    └── 007_perfil_extendido.sql           Teléfono, dirección + bucket "avatares"
 ```
 
 ## Próximos módulos

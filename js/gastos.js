@@ -3,6 +3,11 @@
 // ============================================================================
 import { supabase } from './supabaseClient.js';
 
+// Mismo bucket privado que usa servicios.js — sus políticas de Storage solo
+// exigen que la ruta empiece por "{hogar_id}/...", sin importar qué tabla la
+// referencia, así que no hace falta un bucket aparte para comprobantes de gastos.
+const BUCKET = 'comprobantes';
+
 /** Catálogo de categorías (debe coincidir con el CHECK de sql/003_gastos.sql). */
 export const CATEGORIAS = [
   { valor: 'mercado', etiqueta: 'Mercado' },
@@ -82,6 +87,27 @@ export async function actualizarGasto(gastoId, cambios) {
 export async function eliminarGasto(gastoId) {
   const { error } = await supabase.from('gastos').delete().eq('id', gastoId);
   if (error) throw error;
+}
+
+/** Sube el comprobante de un gasto al bucket privado "comprobantes". */
+export async function subirComprobanteGasto(hogarId, gastoId, archivo) {
+  const nombreSeguro = archivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `${hogarId}/gasto-${gastoId}-${Date.now()}-${nombreSeguro}`;
+
+  const { error: errorSubida } = await supabase.storage.from(BUCKET).upload(path, archivo, {
+    upsert: false,
+  });
+  if (errorSubida) throw errorSubida;
+
+  await actualizarGasto(gastoId, { comprobante_path: path });
+  return path;
+}
+
+/** Bucket privado: no hay URL pública, se pide una firmada de corta duración. */
+export async function obtenerUrlComprobanteGasto(path) {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 /**

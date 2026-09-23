@@ -38,6 +38,25 @@ export function formatearMoneda(valor) {
   }).format(valor ?? 0);
 }
 
+/**
+ * Convierte un <input> de dinero en un campo con separador de miles mientras
+ * se escribe (ej. "36000" -> "36.000"). El input debe ser type="text" en el
+ * HTML (los inputs type="number" del navegador no aceptan puntos). Usa
+ * obtenerValorNumerico() para leer el valor real (sin puntos) al enviar.
+ */
+export function activarFormatoMiles(input) {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const crudo = input.value.replace(/\D/g, '');
+    input.value = crudo ? Number(crudo).toLocaleString('es-CO') : '';
+  });
+}
+
+/** Lee el valor numérico real de un input formateado con activarFormatoMiles(). */
+export function obtenerValorNumerico(input) {
+  return Number(String(input?.value ?? '').replace(/\D/g, '')) || 0;
+}
+
 export function alternarCargando(botonId, cargando, textoNormal) {
   const boton = document.getElementById(botonId);
   if (!boton) return;

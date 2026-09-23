@@ -113,7 +113,7 @@
 
   <!-- Modal: agregar gasto -->
   <div class="modal fade" id="modal-nuevo-gasto" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-nuevo-gasto">
           <div class="modal-header">
@@ -129,7 +129,7 @@
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label for="gasto-monto" class="form-label">Monto</label>
-                <input type="number" min="0.01" step="100" class="form-control" id="gasto-monto" required />
+                <input type="text" inputmode="numeric" class="form-control" id="gasto-monto" required />
               </div>
               <div class="col-6">
                 <label for="gasto-fecha" class="form-label">Fecha</label>
@@ -150,10 +150,37 @@
               <label for="gasto-observaciones" class="form-label">Observaciones (opcional)</label>
               <textarea id="gasto-observaciones" class="form-control" rows="2"></textarea>
             </div>
+            <div class="mb-3">
+              <label for="gasto-comprobante" class="form-label">Comprobante (opcional)</label>
+              <input type="file" class="form-control" id="gasto-comprobante" accept="image/*,.pdf" />
+              <div class="form-text">Foto o PDF de la factura/recibo. Puedes agregarlo después si no lo tienes a la mano.</div>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="submit" id="btn-agregar-gasto" class="btn btn-domus-primary">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: adjuntar/reemplazar comprobante de un gasto ya registrado -->
+  <div class="modal fade" id="modal-adjuntar-comprobante-gasto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-adjuntar-comprobante-gasto">
+          <div class="modal-header">
+            <h5 class="modal-title">Adjuntar comprobante</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-adjuntar-gasto"></div>
+            <input type="file" class="form-control" id="adjuntar-comprobante-gasto" accept="image/*,.pdf" required />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-comprobante-gasto" class="btn btn-domus-primary">Subir</button>
           </div>
         </form>
       </div>
@@ -169,15 +196,25 @@
       agregarGasto,
       eliminarGasto,
       calcularResumenMes,
+      subirComprobanteGasto,
+      obtenerUrlComprobanteGasto,
       CATEGORIAS,
       METODOS_PAGO,
       etiquetaCategoria,
       etiquetaMetodoPago,
     } from './js/gastos.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando, formatearMoneda } from './js/ui.js';
+    import {
+      mostrarMensaje,
+      limpiarMensaje,
+      alternarCargando,
+      formatearMoneda,
+      activarFormatoMiles,
+      obtenerValorNumerico,
+    } from './js/ui.js';
 
     let hogarActivo = null;
     let gastos = [];
+    let gastoIdParaAdjuntar = null;
 
     async function salir() {
       await cerrarSesion();
@@ -185,6 +222,8 @@
     }
     document.getElementById('btn-salir').addEventListener('click', salir);
     document.getElementById('btn-salir-movil').addEventListener('click', salir);
+
+    activarFormatoMiles(document.getElementById('gasto-monto'));
 
     llenarSelects();
 
@@ -270,6 +309,24 @@
           }
         });
       });
+      lista.querySelectorAll('[data-adjuntar-gasto]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+          gastoIdParaAdjuntar = boton.dataset.adjuntarGasto;
+          document.getElementById('form-adjuntar-comprobante-gasto').reset();
+          limpiarMensaje('mensaje-modal-adjuntar-gasto');
+          new bootstrap.Modal(document.getElementById('modal-adjuntar-comprobante-gasto')).show();
+        });
+      });
+      lista.querySelectorAll('[data-ver-comprobante-gasto]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            const url = await obtenerUrlComprobanteGasto(boton.dataset.verComprobanteGasto);
+            window.open(url, '_blank', 'noopener');
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo abrir el comprobante: ' + error.message);
+          }
+        });
+      });
     }
 
     function filaGasto(g) {
@@ -279,6 +336,9 @@
         month: 'short',
         year: 'numeric',
       });
+      const comprobanteBtn = g.comprobante_path
+        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}">📄 Ver comprobante</button>`
+        : `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}">📎 Adjuntar</button>`;
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div>
@@ -289,8 +349,9 @@
             <small class="text-muted">${fecha} · ${escapeHtml(etiquetaMetodoPago(g.metodo_pago))} · Registrado por ${escapeHtml(quien)}</small>
             ${g.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(g.observaciones)}</div>` : ''}
           </div>
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="fw-semibold">${formatearMoneda(g.monto)}</span>
+            ${comprobanteBtn}
             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>
           </div>
         </li>`;
@@ -301,15 +362,20 @@
       limpiarMensaje('mensaje-modal-gasto');
 
       const descripcion = document.getElementById('gasto-descripcion').value.trim();
-      const monto = Number(document.getElementById('gasto-monto').value);
+      const monto = obtenerValorNumerico(document.getElementById('gasto-monto'));
       const fecha = document.getElementById('gasto-fecha').value;
       const categoria = document.getElementById('gasto-categoria').value;
       const metodoPago = document.getElementById('gasto-metodo-pago').value;
       const observaciones = document.getElementById('gasto-observaciones').value.trim();
 
+      const archivoComprobante = document.getElementById('gasto-comprobante').files[0];
+
       alternarCargando('btn-agregar-gasto', true);
       try {
-        await agregarGasto(hogarActivo.id, { descripcion, monto, fecha, categoria, metodoPago, observaciones });
+        const gasto = await agregarGasto(hogarActivo.id, { descripcion, monto, fecha, categoria, metodoPago, observaciones });
+        if (archivoComprobante) {
+          await subirComprobanteGasto(hogarActivo.id, gasto.id, archivoComprobante);
+        }
         document.getElementById('form-nuevo-gasto').reset();
         llenarSelects();
         bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-gasto'))?.hide();
@@ -321,10 +387,28 @@
       }
     });
 
+    document.getElementById('form-adjuntar-comprobante-gasto').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-adjuntar-gasto');
+      const archivo = document.getElementById('adjuntar-comprobante-gasto').files[0];
+      if (!archivo) return;
+
+      alternarCargando('btn-guardar-comprobante-gasto', true);
+      try {
+        await subirComprobanteGasto(hogarActivo.id, gastoIdParaAdjuntar, archivo);
+        bootstrap.Modal.getInstance(document.getElementById('modal-adjuntar-comprobante-gasto'))?.hide();
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-adjuntar-gasto', 'No se pudo subir el comprobante: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-comprobante-gasto', false, 'Subir');
+      }
+    });
+
     function escapeHtml(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto ?? '';
-      return div.innerHTML;
+      return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
     }
   </script>
 </body>

@@ -84,11 +84,24 @@
           Historial de pagados <span id="badge-pagados" class="badge text-bg-light border ms-1">0</span>
         </button>
       </li>
+      <li class="nav-item">
+        <button class="nav-link" data-vista="calendario" type="button">📅 Calendario</button>
+      </li>
     </ul>
 
     <ul id="lista-servicios" class="list-group">
       <li class="list-group-item text-muted">Cargando...</li>
     </ul>
+
+    <div id="vista-calendario" style="display: none;">
+      <div class="card domus-stat-card p-3 mb-3 d-flex flex-row align-items-center justify-content-between">
+        <button id="btn-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+        <strong id="calendario-titulo-mes">—</strong>
+        <button id="btn-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+      </div>
+      <div id="calendario-grid" class="domus-calendario-grid mb-3"></div>
+      <div id="calendario-detalle-dia"></div>
+    </div>
       </main>
     </div>
 
@@ -115,7 +128,7 @@
 
   <!-- Modal: agregar servicio -->
   <div class="modal fade" id="modal-nuevo-servicio" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-nuevo-servicio">
           <div class="modal-header">
@@ -131,7 +144,7 @@
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label for="servicio-monto" class="form-label">Monto</label>
-                <input type="number" min="0.01" step="100" class="form-control" id="servicio-monto" required />
+                <input type="text" inputmode="numeric" class="form-control" id="servicio-monto" required />
               </div>
               <div class="col-6">
                 <label for="servicio-vencimiento" class="form-label">Fecha de vencimiento</label>
@@ -141,6 +154,15 @@
             <div class="mb-3">
               <label for="servicio-categoria" class="form-label">Categoría</label>
               <select id="servicio-categoria" class="form-select"></select>
+            </div>
+            <div class="mb-3">
+              <label for="servicio-referencia" class="form-label">Número de referencia (opcional)</label>
+              <input type="text" class="form-control" id="servicio-referencia" placeholder="Ej. número de factura o cuenta contrato" />
+            </div>
+            <div class="mb-3">
+              <label for="servicio-enlace-pago" class="form-label">Enlace de pago (opcional)</label>
+              <input type="url" class="form-control" id="servicio-enlace-pago" placeholder="https://..." />
+              <div class="form-text">Link directo a la página o factura donde se paga este servicio.</div>
             </div>
             <div class="mb-3">
               <label for="servicio-observaciones" class="form-label">Observaciones (opcional)</label>
@@ -158,7 +180,7 @@
 
   <!-- Modal: marcar como pagado (con comprobante opcional) -->
   <div class="modal fade" id="modal-pagar-servicio" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-pagar-servicio">
           <div class="modal-header">
@@ -182,7 +204,7 @@
 
   <!-- Modal: adjuntar/reemplazar comprobante de un pago ya hecho -->
   <div class="modal fade" id="modal-adjuntar-comprobante" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="form-adjuntar-comprobante">
           <div class="modal-header">
@@ -215,16 +237,27 @@
       subirComprobante,
       obtenerUrlComprobante,
       calcularResumenServicios,
+      agruparServiciosPorFecha,
       CATEGORIAS,
       etiquetaCategoria,
     } from './js/servicios.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando, formatearMoneda } from './js/ui.js';
+    import {
+      mostrarMensaje,
+      limpiarMensaje,
+      alternarCargando,
+      formatearMoneda,
+      activarFormatoMiles,
+      obtenerValorNumerico,
+    } from './js/ui.js';
 
     let hogarActivo = null;
     let servicios = [];
     let vistaActual = 'pendiente';
     let servicioIdParaPagar = null;
     let servicioIdParaAdjuntar = null;
+    let mesCalendario = new Date();
+    mesCalendario.setDate(1);
+    let diaSeleccionado = null;
 
     async function salir() {
       await cerrarSesion();
@@ -232,6 +265,8 @@
     }
     document.getElementById('btn-salir').addEventListener('click', salir);
     document.getElementById('btn-salir-movil').addEventListener('click', salir);
+
+    activarFormatoMiles(document.getElementById('servicio-monto'));
 
     llenarSelects();
 
@@ -365,6 +400,14 @@
           ? `Vence ${formatearFecha(s.fecha_vencimiento)} · Registrado por ${escapeHtml(quienRegistro)}`
           : `Pagado ${formatearFecha(s.fecha_pago)} por ${escapeHtml(quienPago || '—')}`;
 
+      const referenciaInfo = s.numero_referencia
+        ? `<div class="small text-muted">Referencia: ${escapeHtml(s.numero_referencia)}</div>`
+        : '';
+
+      const pagarLinkBtn = s.enlace_pago
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(s.enlace_pago)}" target="_blank" rel="noopener noreferrer">💳 Ir a pagar</a>`
+        : '';
+
       const comprobanteBtn = s.comprobante_path
         ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante="${s.comprobante_path}">📄 Ver comprobante</button>`
         : s.estado === 'pagado'
@@ -373,7 +416,8 @@
 
       const acciones =
         s.estado === 'pendiente'
-          ? `<button class="btn btn-sm btn-domus-primary" data-pagar="${s.id}" data-nombre="${escapeHtml(s.nombre)}">Marcar pagado</button>
+          ? `${pagarLinkBtn}
+             <button class="btn btn-sm btn-domus-primary" data-pagar="${s.id}" data-nombre="${escapeHtml(s.nombre)}">Marcar pagado</button>
              <button class="btn btn-sm btn-outline-danger" data-eliminar="${s.id}">Eliminar</button>`
           : `${comprobanteBtn}
              <button class="btn btn-sm btn-outline-secondary" data-reabrir="${s.id}">Reabrir</button>
@@ -388,6 +432,7 @@
               ${vencido ? '<span class="badge text-bg-danger ms-1">Vencido</span>' : ''}
             </div>
             <small class="text-muted">${infoSecundaria}</small>
+            ${referenciaInfo}
             ${s.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(s.observaciones)}</div>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -402,23 +447,147 @@
         vistaActual = boton.dataset.vista;
         document.querySelectorAll('#tabs-servicios .nav-link').forEach((b) => b.classList.remove('active'));
         boton.classList.add('active');
-        pintarLista();
+
+        const esCalendario = vistaActual === 'calendario';
+        document.getElementById('lista-servicios').style.display = esCalendario ? 'none' : '';
+        document.getElementById('vista-calendario').style.display = esCalendario ? '' : 'none';
+
+        if (esCalendario) {
+          renderCalendario();
+        } else {
+          pintarLista();
+        }
       });
     });
+
+    document.getElementById('btn-mes-anterior').addEventListener('click', () => {
+      mesCalendario.setMonth(mesCalendario.getMonth() - 1);
+      diaSeleccionado = null;
+      renderCalendario();
+    });
+    document.getElementById('btn-mes-siguiente').addEventListener('click', () => {
+      mesCalendario.setMonth(mesCalendario.getMonth() + 1);
+      diaSeleccionado = null;
+      renderCalendario();
+    });
+
+    function renderCalendario() {
+      const porFecha = agruparServiciosPorFecha(servicios);
+      const anio = mesCalendario.getFullYear();
+      const mes = mesCalendario.getMonth();
+      const hoy = new Date();
+      const hoyStr = hoy.toISOString().slice(0, 10);
+
+      document.getElementById('calendario-titulo-mes').textContent = mesCalendario.toLocaleDateString('es-CO', {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const primerDiaSemana = new Date(anio, mes, 1).getDay(); // 0 = domingo
+      const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+
+      const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      let html = nombresDias.map((d) => `<div class="domus-calendario-dow">${d}</div>`).join('');
+
+      for (let i = 0; i < primerDiaSemana; i++) {
+        html += `<div class="domus-calendario-dia domus-dia-vacio"></div>`;
+      }
+
+      for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fechaStr = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const serviciosDia = porFecha.get(fechaStr) || [];
+        const esHoy = fechaStr === hoyStr;
+        const esSeleccionado = fechaStr === diaSeleccionado;
+
+        const dots = serviciosDia
+          .map((s) => {
+            const vencido = s.estado === 'pendiente' && fechaStr < hoyStr;
+            const clase = s.estado === 'pagado' ? 'pagado' : vencido ? 'vencido' : 'pendiente';
+            return `<span class="domus-calendario-dot ${clase}"></span>`;
+          })
+          .join('');
+
+        html += `
+          <div class="domus-calendario-dia ${esHoy ? 'domus-dia-hoy' : ''} ${esSeleccionado ? 'domus-dia-seleccionado' : ''}" data-fecha="${fechaStr}">
+            <span>${dia}</span>
+            <span class="domus-calendario-dots">${dots}</span>
+          </div>`;
+      }
+
+      document.getElementById('calendario-grid').innerHTML = html;
+      document.querySelectorAll('#calendario-grid [data-fecha]').forEach((el) => {
+        el.addEventListener('click', () => {
+          diaSeleccionado = el.dataset.fecha;
+          renderCalendario();
+        });
+      });
+
+      pintarDetalleDia(porFecha);
+    }
+
+    function pintarDetalleDia(porFecha) {
+      const contenedor = document.getElementById('calendario-detalle-dia');
+      if (!diaSeleccionado) {
+        contenedor.innerHTML = '';
+        return;
+      }
+      const serviciosDia = porFecha.get(diaSeleccionado) || [];
+      const fechaLegible = formatearFecha(diaSeleccionado);
+
+      if (serviciosDia.length === 0) {
+        contenedor.innerHTML = `<p class="text-muted">No hay servicios programados para el ${fechaLegible}.</p>`;
+        return;
+      }
+
+      contenedor.innerHTML = `
+        <h6 class="mb-2">Servicios del ${fechaLegible}</h6>
+        <ul class="list-group">${serviciosDia.map((s) => filaServicio(s, new Date())).join('')}</ul>`;
+
+      contenedor.querySelectorAll('[data-pagar]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalPagar(boton.dataset.pagar, boton.dataset.nombre));
+      });
+      contenedor.querySelectorAll('[data-eliminar]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este servicio?')) return;
+          try {
+            await eliminarServicio(boton.dataset.eliminar);
+            await cargarServicios();
+            renderCalendario();
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo eliminar: ' + error.message);
+          }
+        });
+      });
+    }
 
     document.getElementById('form-nuevo-servicio').addEventListener('submit', async (evento) => {
       evento.preventDefault();
       limpiarMensaje('mensaje-modal-servicio');
 
       const nombre = document.getElementById('servicio-nombre').value.trim();
-      const monto = Number(document.getElementById('servicio-monto').value);
+      const monto = obtenerValorNumerico(document.getElementById('servicio-monto'));
       const fechaVencimiento = document.getElementById('servicio-vencimiento').value;
       const categoria = document.getElementById('servicio-categoria').value;
+      const numeroReferencia = document.getElementById('servicio-referencia').value.trim();
+      const enlacePago = document.getElementById('servicio-enlace-pago').value.trim();
       const observaciones = document.getElementById('servicio-observaciones').value.trim();
+
+      if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
+        mostrarMensaje('mensaje-modal-servicio', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
 
       alternarCargando('btn-agregar-servicio', true);
       try {
-        await agregarServicio(hogarActivo.id, { nombre, monto, fechaVencimiento, categoria, observaciones });
+        await agregarServicio(hogarActivo.id, {
+          nombre,
+          monto,
+          fechaVencimiento,
+          categoria,
+          numeroReferencia,
+          enlacePago,
+          observaciones,
+        });
         document.getElementById('form-nuevo-servicio').reset();
         llenarSelects();
         bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-servicio'))?.hide();
@@ -477,9 +646,9 @@
     });
 
     function escapeHtml(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto ?? '';
-      return div.innerHTML;
+      return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
     }
   </script>
 </body>

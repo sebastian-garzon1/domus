@@ -53,6 +53,8 @@ export async function agregarServicio(hogarId, campos) {
       categoria: campos.categoria || 'otros',
       monto: campos.monto,
       fecha_vencimiento: campos.fechaVencimiento,
+      numero_referencia: campos.numeroReferencia || null,
+      enlace_pago: campos.enlacePago || null,
       observaciones: campos.observaciones || null,
       registrado_por: usuario.user.id,
     })
@@ -138,4 +140,18 @@ export function calcularResumenServicios(servicios) {
     proximoPago: proximoPago ?? null,
     countPagadosMes: pagadosMes.length,
   };
+}
+
+/**
+ * Agrupa los servicios por su fecha de vencimiento ("YYYY-MM-DD" -> lista),
+ * para pintar el calendario mensual de servicios.html.
+ */
+export function agruparServiciosPorFecha(servicios) {
+  const porFecha = new Map();
+  for (const s of servicios) {
+    if (!s.fecha_vencimiento) continue;
+    if (!porFecha.has(s.fecha_vencimiento)) porFecha.set(s.fecha_vencimiento, []);
+    porFecha.get(s.fecha_vencimiento).push(s);
+  }
+  return porFecha;
 }

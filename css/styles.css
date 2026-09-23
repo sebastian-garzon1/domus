@@ -67,14 +67,18 @@ textarea.form-control {
   border: none;
   border-radius: var(--domus-radius-sm);
   color: var(--domus-text);
-  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
+  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
 }
 .form-control:focus,
 .form-select:focus {
   background-color: var(--domus-bg);
   color: var(--domus-text);
-  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light),
+  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light),
     0 0 0 0.2rem var(--domus-primary-soft);
+}
+.form-control[type='file'] {
+  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
+  padding: 0.5rem 0.75rem;
 }
 .form-control::placeholder {
   color: var(--domus-text-muted);
@@ -317,4 +321,107 @@ textarea.form-control {
 
 .offcanvas-header .btn-close {
   filter: invert(1) grayscale(100%);
+}
+
+/* --- Calendario de servicios (servicios.html) ------------------------------ */
+
+.domus-calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+
+.domus-calendario-dow {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--domus-text-muted);
+  padding-bottom: 0.15rem;
+}
+
+.domus-calendario-dia {
+  aspect-ratio: 1;
+  border-radius: var(--domus-radius-sm);
+  background-color: var(--domus-bg);
+  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--domus-text);
+  transition: box-shadow 0.12s ease;
+}
+.domus-calendario-dia.domus-dia-vacio {
+  visibility: hidden;
+  box-shadow: none;
+  cursor: default;
+}
+.domus-calendario-dia.domus-dia-hoy {
+  color: var(--domus-primary-text);
+  font-weight: 700;
+}
+.domus-calendario-dia.domus-dia-seleccionado {
+  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
+  color: var(--domus-primary-text);
+}
+
+.domus-calendario-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+  height: 6px;
+}
+.domus-calendario-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.domus-calendario-dot.pendiente {
+  background-color: var(--domus-accent);
+}
+.domus-calendario-dot.vencido {
+  background-color: #e5534b;
+}
+.domus-calendario-dot.pagado {
+  background-color: var(--domus-primary-text);
+}
+
+/* --- Avatar de perfil (perfil.html) ----------------------------------------- */
+
+.domus-avatar-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.domus-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -3px -3px 8px var(--domus-shadow-light);
+  background-color: var(--domus-bg);
+}
+
+.domus-avatar-editar {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--domus-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 7px var(--domus-shadow-dark);
+  cursor: pointer;
+}
+.domus-avatar-editar:hover {
+  background-color: var(--domus-primary-hover);
 }
