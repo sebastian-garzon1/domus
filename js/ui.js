@@ -2,6 +2,20 @@
 // DOMUS — Helpers de interfaz compartidos entre páginas
 // ============================================================================
 
+/**
+ * Fecha de HOY en la zona horaria del dispositivo, como "YYYY-MM-DD".
+ * OJO: nunca uses `new Date().toISOString().slice(0, 10)` para esto —
+ * toISOString() convierte a UTC, así que en Colombia (UTC-5) muestra el día
+ * siguiente durante las últimas horas de la noche (ej. 11pm del 22 ya
+ * calcula 23 en UTC).
+ */
+export function fechaLocalHoy(referencia = new Date()) {
+  const anio = referencia.getFullYear();
+  const mes = String(referencia.getMonth() + 1).padStart(2, '0');
+  const dia = String(referencia.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
 /** Muestra un mensaje de error/éxito dentro de un contenedor Bootstrap. */
 export function mostrarMensaje(contenedorId, texto, tipo = 'danger') {
   const contenedor = document.getElementById(contenedorId);

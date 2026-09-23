@@ -36,63 +36,76 @@
         <span style="width: 38px"></span>
       </div>
 
-      <main class="domus-main flex-grow-1" style="max-width: 560px;">
+      <main class="domus-main flex-grow-1">
     <h2 class="mb-4">Mi perfil</h2>
 
     <div id="mensaje"></div>
 
-    <div class="card domus-stat-card p-4 mb-4">
-      <div class="d-flex align-items-center gap-3 mb-2">
-        <div class="domus-avatar-wrap">
-          <img id="avatar-preview" class="domus-avatar" alt="Foto de perfil" />
-          <button type="button" id="btn-cambiar-foto" class="domus-avatar-editar" title="Cambiar foto">📷</button>
-          <input type="file" id="input-avatar" accept="image/*" class="d-none" />
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card domus-stat-card p-4 mb-4">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="domus-avatar-wrap">
+              <img id="avatar-preview" class="domus-avatar" alt="Foto de perfil" />
+              <button type="button" id="btn-cambiar-foto" class="domus-avatar-editar" title="Cambiar foto">📷</button>
+              <input type="file" id="input-avatar" accept="image/*" class="d-none" />
+            </div>
+            <div>
+              <div id="avatar-nombre" class="h5 mb-0">—</div>
+              <div id="avatar-email" class="text-muted small">—</div>
+            </div>
+          </div>
+          <div id="mensaje-avatar" class="mt-2"></div>
         </div>
-        <div>
-          <div id="avatar-nombre" class="h5 mb-0">—</div>
-          <div id="avatar-email" class="text-muted small">—</div>
+
+        <div class="card domus-stat-card p-4">
+          <h5 class="mb-3">Información personal</h5>
+          <form id="form-perfil">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Correo</label>
+                <input type="email" id="email" class="form-control" disabled />
+              </div>
+              <div class="col-md-6">
+                <label for="nombre-usuario" class="form-label">Nombre de usuario</label>
+                <input type="text" id="nombre-usuario" class="form-control" placeholder="Ej. sebas_g" pattern="[a-z0-9_]{3,20}" title="3-20 caracteres: minúsculas, números y guion bajo" />
+                <div class="form-text">Solo minúsculas, números y "_". Debe ser único.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre completo</label>
+                <input type="text" id="nombre" class="form-control" required />
+              </div>
+              <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono (opcional)</label>
+                <input type="tel" id="telefono" class="form-control" placeholder="Ej. 300 123 4567" />
+              </div>
+              <div class="col-12">
+                <label for="direccion" class="form-label">Dirección (opcional)</label>
+                <input type="text" id="direccion" class="form-control" placeholder="Ej. Calle 10 # 20-30" />
+              </div>
+            </div>
+            <button type="submit" id="btn-guardar" class="btn btn-domus-primary mt-3">Guardar cambios</button>
+          </form>
         </div>
       </div>
-      <div id="mensaje-avatar" class="mt-2"></div>
-    </div>
 
-    <div class="card domus-stat-card p-4 mb-4">
-      <h5 class="mb-3">Información personal</h5>
-      <form id="form-perfil">
-        <div class="mb-3">
-          <label class="form-label">Correo</label>
-          <input type="email" id="email" class="form-control" disabled />
+      <div class="col-lg-5">
+        <div class="card domus-stat-card p-4">
+          <h5 class="mb-3">Cambiar contraseña</h5>
+          <div id="mensaje-password"></div>
+          <form id="form-password">
+            <div class="mb-3">
+              <label for="password-nueva" class="form-label">Nueva contraseña</label>
+              <input type="password" id="password-nueva" class="form-control" minlength="6" required autocomplete="new-password" />
+            </div>
+            <div class="mb-3">
+              <label for="password-confirmar" class="form-label">Confirmar nueva contraseña</label>
+              <input type="password" id="password-confirmar" class="form-control" minlength="6" required autocomplete="new-password" />
+            </div>
+            <button type="submit" id="btn-cambiar-password" class="btn btn-domus-primary">Actualizar contraseña</button>
+          </form>
         </div>
-        <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre completo</label>
-          <input type="text" id="nombre" class="form-control" required />
-        </div>
-        <div class="mb-3">
-          <label for="telefono" class="form-label">Teléfono (opcional)</label>
-          <input type="tel" id="telefono" class="form-control" placeholder="Ej. 300 123 4567" />
-        </div>
-        <div class="mb-3">
-          <label for="direccion" class="form-label">Dirección (opcional)</label>
-          <input type="text" id="direccion" class="form-control" placeholder="Ej. Calle 10 # 20-30" />
-        </div>
-        <button type="submit" id="btn-guardar" class="btn btn-domus-primary">Guardar cambios</button>
-      </form>
-    </div>
-
-    <div class="card domus-stat-card p-4">
-      <h5 class="mb-3">Cambiar contraseña</h5>
-      <div id="mensaje-password"></div>
-      <form id="form-password">
-        <div class="mb-3">
-          <label for="password-nueva" class="form-label">Nueva contraseña</label>
-          <input type="password" id="password-nueva" class="form-control" minlength="6" required autocomplete="new-password" />
-        </div>
-        <div class="mb-3">
-          <label for="password-confirmar" class="form-label">Confirmar nueva contraseña</label>
-          <input type="password" id="password-confirmar" class="form-control" minlength="6" required autocomplete="new-password" />
-        </div>
-        <button type="submit" id="btn-cambiar-password" class="btn btn-domus-primary">Actualizar contraseña</button>
-      </form>
+      </div>
     </div>
       </main>
     </div>
@@ -144,7 +157,7 @@
       usuario = await obtenerUsuarioActual();
       const { data: perfil, error } = await supabase
         .from('profiles')
-        .select('nombre_completo, email, telefono, direccion, avatar_url')
+        .select('nombre_completo, email, telefono, direccion, avatar_url, nombre_usuario')
         .eq('id', usuario.id)
         .single();
 
@@ -153,6 +166,7 @@
         document.getElementById('nombre').value = perfil.nombre_completo ?? '';
         document.getElementById('telefono').value = perfil.telefono ?? '';
         document.getElementById('direccion').value = perfil.direccion ?? '';
+        document.getElementById('nombre-usuario').value = perfil.nombre_usuario ?? '';
         document.getElementById('avatar-nombre').textContent = perfil.nombre_completo || perfil.email;
         document.getElementById('avatar-email').textContent = perfil.email;
         document.getElementById('avatar-preview').src = perfil.avatar_url || AVATAR_PLACEHOLDER;
@@ -165,18 +179,34 @@
       const nombre = document.getElementById('nombre').value.trim();
       const telefono = document.getElementById('telefono').value.trim();
       const direccion = document.getElementById('direccion').value.trim();
+      const nombreUsuario = document.getElementById('nombre-usuario').value.trim().toLowerCase();
+
+      if (nombreUsuario && !/^[a-z0-9_]{3,20}$/.test(nombreUsuario)) {
+        mostrarMensaje('mensaje', 'El nombre de usuario debe tener 3-20 caracteres: minúsculas, números y "_".');
+        return;
+      }
 
       alternarCargando('btn-guardar', true);
       try {
         const { error } = await supabase
           .from('profiles')
-          .update({ nombre_completo: nombre, telefono: telefono || null, direccion: direccion || null })
+          .update({
+            nombre_completo: nombre,
+            telefono: telefono || null,
+            direccion: direccion || null,
+            nombre_usuario: nombreUsuario || null,
+          })
           .eq('id', usuario.id);
         if (error) throw error;
+        document.getElementById('nombre-usuario').value = nombreUsuario;
         document.getElementById('avatar-nombre').textContent = nombre || document.getElementById('email').value;
         mostrarMensaje('mensaje', 'Perfil actualizado.', 'success');
       } catch (error) {
-        mostrarMensaje('mensaje', 'No se pudo guardar: ' + error.message);
+        const mensaje =
+          error.code === '23505'
+            ? 'Ese nombre de usuario ya está en uso, elige otro.'
+            : 'No se pudo guardar: ' + error.message;
+        mostrarMensaje('mensaje', mensaje);
       } finally {
         alternarCargando('btn-guardar', false, 'Guardar cambios');
       }

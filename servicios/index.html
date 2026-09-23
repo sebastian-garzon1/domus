@@ -89,9 +89,16 @@
       </li>
     </ul>
 
-    <ul id="lista-servicios" class="list-group">
-      <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
-    </ul>
+    <div id="vista-lista">
+      <div class="card domus-stat-card p-2 mb-3 d-flex flex-row align-items-center justify-content-between">
+        <button id="btn-lista-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+        <strong id="lista-titulo-mes">—</strong>
+        <button id="btn-lista-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+      </div>
+      <ul id="lista-servicios" class="list-group">
+        <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
+      </ul>
+    </div>
 
     <div id="vista-calendario" style="display: none;">
       <div class="card domus-stat-card p-3 mb-3 d-flex flex-row align-items-center justify-content-between">
@@ -248,6 +255,7 @@
       formatearMoneda,
       activarFormatoMiles,
       obtenerValorNumerico,
+      fechaLocalHoy,
     } from '../js/ui.js';
 
     let hogarActivo = null;
@@ -258,6 +266,8 @@
     let mesCalendario = new Date();
     mesCalendario.setDate(1);
     let diaSeleccionado = null;
+    let mesLista = new Date();
+    mesLista.setDate(1);
 
     async function salir() {
       await cerrarSesion();
@@ -333,13 +343,26 @@
 
     function pintarLista() {
       const lista = document.getElementById('lista-servicios');
+      document.getElementById('lista-titulo-mes').textContent = mesLista.toLocaleDateString('es-CO', {
+        month: 'long',
+        year: 'numeric',
+      });
+
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
-      const visibles = servicios.filter((s) => s.estado === vistaActual);
+      const anio = mesLista.getFullYear();
+      const mes = mesLista.getMonth();
+      const visibles = servicios.filter((s) => {
+        if (s.estado !== vistaActual) return false;
+        const fechaRelevante = s.estado === 'pendiente' ? s.fecha_vencimiento : s.fecha_pago;
+        if (!fechaRelevante) return false;
+        const f = new Date(fechaRelevante + 'T00:00:00');
+        return f.getFullYear() === anio && f.getMonth() === mes;
+      });
 
       if (visibles.length === 0) {
         lista.innerHTML = `<li class="list-group-item text-muted">
-          ${vistaActual === 'pendiente' ? 'No hay servicios pendientes.' : 'Todavía no hay pagos registrados.'}
+          ${vistaActual === 'pendiente' ? 'No hay servicios pendientes este mes.' : 'No hay pagos registrados este mes.'}
         </li>`;
         return;
       }
@@ -449,7 +472,7 @@
         boton.classList.add('active');
 
         const esCalendario = vistaActual === 'calendario';
-        document.getElementById('lista-servicios').style.display = esCalendario ? 'none' : '';
+        document.getElementById('vista-lista').style.display = esCalendario ? 'none' : '';
         document.getElementById('vista-calendario').style.display = esCalendario ? '' : 'none';
 
         if (esCalendario) {
@@ -471,12 +494,21 @@
       renderCalendario();
     });
 
+    document.getElementById('btn-lista-mes-anterior').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() - 1);
+      pintarLista();
+    });
+    document.getElementById('btn-lista-mes-siguiente').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() + 1);
+      pintarLista();
+    });
+
     function renderCalendario() {
       const porFecha = agruparServiciosPorFecha(servicios);
       const anio = mesCalendario.getFullYear();
       const mes = mesCalendario.getMonth();
       const hoy = new Date();
-      const hoyStr = hoy.toISOString().slice(0, 10);
+      const hoyStr = fechaLocalHoy(hoy);
 
       document.getElementById('calendario-titulo-mes').textContent = mesCalendario.toLocaleDateString('es-CO', {
         month: 'long',

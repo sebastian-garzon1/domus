@@ -80,6 +80,24 @@ textarea.form-control {
   box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
   padding: 0.5rem 0.75rem;
 }
+
+/* --bs-border-color se deja transparente para las tarjetas/inputs
+   neumórficos (ver más abajo), pero un checkbox SÍ necesita borde propio
+   para no volverse invisible sobre el mismo fondo. */
+.form-check-input {
+  background-color: var(--domus-bg);
+  border: 1px solid var(--domus-text-muted);
+  box-shadow: 2px 2px 5px var(--domus-shadow-dark), -2px -2px 5px var(--domus-shadow-light);
+}
+.form-check-input:checked {
+  background-color: var(--domus-primary);
+  border-color: var(--domus-primary);
+}
+.form-check-input:focus {
+  border-color: var(--domus-primary);
+  box-shadow: 2px 2px 5px var(--domus-shadow-dark), -2px -2px 5px var(--domus-shadow-light),
+    0 0 0 0.2rem var(--domus-primary-soft);
+}
 .form-control::placeholder {
   color: var(--domus-text-muted);
 }
@@ -385,23 +403,34 @@ textarea.form-control {
 
 .domus-calendario-dots {
   display: flex;
-  gap: 2px;
+  align-items: flex-end;
+  gap: 3px;
   margin-top: 3px;
-  height: 6px;
+  height: 16px;
 }
 .domus-calendario-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
 }
+.domus-calendario-dot.pagado {
+  background-color: var(--domus-primary-text);
+}
+
+/* Pendientes/vencidos se marcan con un rayito (más llamativo que un punto,
+   para que salte a la vista qué días todavía necesitan un pago). */
+.domus-calendario-dot.pendiente,
+.domus-calendario-dot.vencido {
+  width: 11px;
+  height: 16px;
+  border-radius: 0;
+  clip-path: polygon(60% 0%, 0% 60%, 40% 60%, 30% 100%, 100% 40%, 55% 40%);
+}
 .domus-calendario-dot.pendiente {
   background-color: var(--domus-accent);
 }
 .domus-calendario-dot.vencido {
   background-color: #e5534b;
-}
-.domus-calendario-dot.pagado {
-  background-color: var(--domus-primary-text);
 }
 
 /* --- Avatar de perfil (perfil.html) ----------------------------------------- */

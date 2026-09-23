@@ -36,7 +36,7 @@
         <span style="width: 38px"></span>
       </div>
 
-      <main class="domus-main flex-grow-1" style="max-width: 900px;">
+      <main class="domus-main flex-grow-1" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <h2 class="mb-0">💰 Gastos de <span id="nombre-hogar">este hogar</span></h2>
       <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-gasto">
@@ -77,16 +77,77 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="card domus-stat-card p-3 h-100">
-          <span class="text-muted small">Gastos este mes</span>
-          <span id="stat-count" class="h5 mb-0 mt-1">—</span>
+          <span class="text-muted small">Pendientes por pagar</span>
+          <span id="stat-pendientes" class="h5 mb-0 mt-1">—</span>
         </div>
       </div>
     </div>
 
-    <h5 class="mb-3">Historial</h5>
-    <ul id="lista-gastos" class="list-group">
-      <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
+    <ul class="nav nav-tabs mb-3" id="tabs-gastos">
+      <li class="nav-item">
+        <button class="nav-link active" data-vista="lista" type="button">Gastos</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-vista="recurrentes" type="button">🔁 Recurrentes</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-vista="calendario" type="button">📅 Calendario</button>
+      </li>
     </ul>
+
+    <div id="vista-lista">
+      <div class="card domus-stat-card p-2 mb-3 d-flex flex-row align-items-center justify-content-between">
+        <button id="btn-lista-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+        <strong id="lista-titulo-mes">—</strong>
+        <button id="btn-lista-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+      </div>
+
+      <div class="d-flex flex-wrap gap-3 mb-3">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Filtrar por estado" id="filtro-estado">
+          <button type="button" class="btn btn-outline-secondary active" data-estado="todos">Todos</button>
+          <button type="button" class="btn btn-outline-secondary" data-estado="pendiente">Pendientes</button>
+          <button type="button" class="btn btn-outline-secondary" data-estado="pagado">Pagados</button>
+        </div>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Filtrar por tipo" id="filtro-tipo">
+          <button type="button" class="btn btn-outline-secondary active" data-tipo="todos">Todos</button>
+          <button type="button" class="btn btn-outline-secondary" data-tipo="personal">👤 Personal</button>
+          <button type="button" class="btn btn-outline-secondary" data-tipo="hogar">🏠 Del hogar</button>
+        </div>
+      </div>
+
+      <ul id="lista-gastos" class="list-group">
+        <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
+      </ul>
+    </div>
+
+    <div id="vista-recurrentes" style="display: none;">
+      <div class="alert alert-secondary" role="alert">
+        <strong>¿Cómo funcionan los recurrentes?</strong> Un "recurrente" es una plantilla para algo que
+        pagas cada mes (una cuota, el gimnasio, etc.): la creas <em>una sola vez</em> con su monto y el
+        día en que vence. No genera nada por sí sola — cada mes, entra aquí y presiona
+        <strong>"🔄 Generar pendientes del mes"</strong> para crear el gasto pendiente de ese mes a partir
+        de tus plantillas activas. Ese pendiente aparece en la pestaña "Gastos" y en el Calendario hasta
+        que lo marques como pagado.
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <button id="btn-generar-pendientes" class="btn btn-domus-primary" type="button">🔄 Generar pendientes del mes</button>
+        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-recurrente">
+          + Nuevo recurrente
+        </button>
+      </div>
+      <div id="mensaje-recurrentes"></div>
+      <ul id="lista-recurrentes" class="list-group"></ul>
+    </div>
+
+    <div id="vista-calendario" style="display: none;">
+      <div class="card domus-stat-card p-3 mb-3 d-flex flex-row align-items-center justify-content-between">
+        <button id="btn-mes-anterior" class="btn btn-sm btn-outline-secondary" type="button">‹</button>
+        <strong id="calendario-titulo-mes">—</strong>
+        <button id="btn-mes-siguiente" class="btn btn-sm btn-outline-secondary" type="button">›</button>
+      </div>
+      <div id="calendario-grid" class="domus-calendario-grid mb-3"></div>
+      <div id="calendario-detalle-dia"></div>
+    </div>
       </main>
     </div>
 
@@ -111,7 +172,7 @@
     </div>
   </div>
 
-  <!-- Modal: agregar gasto -->
+  <!-- Modal: agregar gasto (del momento, ya pagado) -->
   <div class="modal fade" id="modal-nuevo-gasto" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -124,7 +185,7 @@
             <div id="mensaje-modal-gasto"></div>
             <div class="mb-3">
               <label for="gasto-descripcion" class="form-label">Descripción</label>
-              <input type="text" class="form-control" id="gasto-descripcion" placeholder="Ej. Mercado de la semana" required />
+              <input type="text" class="form-control" id="gasto-descripcion" placeholder="Ej. Sandwich, mercado de la semana..." required />
             </div>
             <div class="row g-2 mb-3">
               <div class="col-6">
@@ -145,6 +206,12 @@
                 <label for="gasto-metodo-pago" class="form-label">Método de pago</label>
                 <select id="gasto-metodo-pago" class="form-select"></select>
               </div>
+            </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="gasto-personal" />
+              <label class="form-check-label" for="gasto-personal">
+                Es un gasto personal (solo tú lo verás, no el resto del hogar)
+              </label>
             </div>
             <div class="mb-3">
               <label for="gasto-observaciones" class="form-label">Observaciones (opcional)</label>
@@ -187,6 +254,146 @@
     </div>
   </div>
 
+  <!-- Modal: marcar un gasto pendiente como pagado (con comprobante opcional) -->
+  <div class="modal fade" id="modal-pagar-gasto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-pagar-gasto">
+          <div class="modal-header">
+            <h5 class="modal-title">Marcar "<span id="pagar-nombre-gasto"></span>" como pagado</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-pagar-gasto"></div>
+            <label for="pagar-comprobante-gasto" class="form-label">Comprobante (opcional)</label>
+            <input type="file" class="form-control" id="pagar-comprobante-gasto" accept="image/*,.pdf" />
+            <div class="form-text">Foto o PDF del pago. Puedes agregarlo después si no lo tienes a la mano.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-confirmar-pago-gasto" class="btn btn-domus-primary">Confirmar pago</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: editar gasto -->
+  <div class="modal fade" id="modal-editar-gasto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-editar-gasto">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar gasto</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-editar-gasto"></div>
+            <div class="mb-3">
+              <label for="editar-descripcion" class="form-label">Descripción</label>
+              <input type="text" class="form-control" id="editar-descripcion" required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-monto" class="form-label">Monto</label>
+                <input type="text" inputmode="numeric" class="form-control" id="editar-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="editar-fecha" class="form-label">Fecha</label>
+                <input type="date" class="form-control" id="editar-fecha" required />
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-categoria" class="form-label">Categoría</label>
+                <select id="editar-categoria" class="form-select"></select>
+              </div>
+              <div class="col-6">
+                <label for="editar-metodo-pago" class="form-label">Método de pago</label>
+                <select id="editar-metodo-pago" class="form-select"></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editar-referencia" class="form-label">Número de referencia (opcional)</label>
+              <input type="text" class="form-control" id="editar-referencia" />
+            </div>
+            <div class="mb-3">
+              <label for="editar-enlace-pago" class="form-label">Enlace de pago (opcional)</label>
+              <input type="url" class="form-control" id="editar-enlace-pago" placeholder="https://..." />
+            </div>
+            <div class="mb-3">
+              <label for="editar-observaciones" class="form-label">Observaciones (opcional)</label>
+              <textarea id="editar-observaciones" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar-gasto" class="btn btn-domus-primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: nuevo gasto recurrente (plantilla) -->
+  <div class="modal fade" id="modal-nuevo-recurrente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-nuevo-recurrente">
+          <div class="modal-header">
+            <h5 class="modal-title">Nuevo gasto recurrente</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-recurrente"></div>
+            <div class="mb-3">
+              <label for="recurrente-descripcion" class="form-label">Descripción</label>
+              <input type="text" class="form-control" id="recurrente-descripcion" placeholder="Ej. Cuota nevera, gimnasio..." required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="recurrente-monto" class="form-label">Monto</label>
+                <input type="text" inputmode="numeric" class="form-control" id="recurrente-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="recurrente-dia-mes" class="form-label">Día del mes</label>
+                <input type="number" min="1" max="28" class="form-control" id="recurrente-dia-mes" placeholder="1-28" required />
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="recurrente-categoria" class="form-label">Categoría</label>
+                <select id="recurrente-categoria" class="form-select"></select>
+              </div>
+              <div class="col-6">
+                <label for="recurrente-metodo-pago" class="form-label">Método de pago</label>
+                <select id="recurrente-metodo-pago" class="form-select"></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="recurrente-referencia" class="form-label">Número de referencia (opcional)</label>
+              <input type="text" class="form-control" id="recurrente-referencia" placeholder="Ej. número de cuota o contrato" />
+            </div>
+            <div class="mb-3">
+              <label for="recurrente-enlace-pago" class="form-label">Enlace de pago (opcional)</label>
+              <input type="url" class="form-control" id="recurrente-enlace-pago" placeholder="https://..." />
+            </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="recurrente-personal" />
+              <label class="form-check-label" for="recurrente-personal">
+                Es personal (solo tú verás los pendientes que genere)
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-agregar-recurrente" class="btn btn-domus-primary">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
     import { protegerPagina, cerrarSesion } from '../js/auth.js';
@@ -194,10 +401,19 @@
     import {
       listarGastos,
       agregarGasto,
+      actualizarGasto,
       eliminarGasto,
+      marcarGastoPagado,
+      reabrirGasto,
       calcularResumenMes,
+      agruparGastosPorFecha,
       subirComprobanteGasto,
       obtenerUrlComprobanteGasto,
+      listarRecurrentes,
+      agregarRecurrente,
+      alternarActivoRecurrente,
+      eliminarRecurrente,
+      generarPendientesDelMes,
       CATEGORIAS,
       METODOS_PAGO,
       etiquetaCategoria,
@@ -210,11 +426,24 @@
       formatearMoneda,
       activarFormatoMiles,
       obtenerValorNumerico,
+      fechaLocalHoy,
     } from '../js/ui.js';
 
     let hogarActivo = null;
     let gastos = [];
+    let recurrentes = [];
+    let vistaActual = 'lista';
     let gastoIdParaAdjuntar = null;
+    let gastoIdParaPagar = null;
+    let gastoIdParaEditar = null;
+    let esPersonalParaPagar = false;
+    let mesCalendario = new Date();
+    mesCalendario.setDate(1);
+    let diaSeleccionado = null;
+    let mesLista = new Date();
+    mesLista.setDate(1);
+    let filtroEstado = 'todos';
+    let filtroTipo = 'todos';
 
     async function salir() {
       await cerrarSesion();
@@ -224,6 +453,8 @@
     document.getElementById('btn-salir-movil').addEventListener('click', salir);
 
     activarFormatoMiles(document.getElementById('gasto-monto'));
+    activarFormatoMiles(document.getElementById('recurrente-monto'));
+    activarFormatoMiles(document.getElementById('editar-monto'));
 
     llenarSelects();
 
@@ -239,21 +470,25 @@
     }
 
     function llenarSelects() {
-      document.getElementById('gasto-categoria').innerHTML = CATEGORIAS.map(
-        (c) => `<option value="${c.valor}">${c.etiqueta}</option>`
-      ).join('');
-      document.getElementById('gasto-metodo-pago').innerHTML = METODOS_PAGO.map(
-        (m) => `<option value="${m.valor}">${m.etiqueta}</option>`
-      ).join('');
-      document.getElementById('gasto-fecha').value = new Date().toISOString().slice(0, 10);
+      const opciones = CATEGORIAS.map((c) => `<option value="${c.valor}">${c.etiqueta}</option>`).join('');
+      document.getElementById('gasto-categoria').innerHTML = opciones;
+      document.getElementById('recurrente-categoria').innerHTML = opciones;
+      document.getElementById('editar-categoria').innerHTML = opciones;
+      const metodos = METODOS_PAGO.map((m) => `<option value="${m.valor}">${m.etiqueta}</option>`).join('');
+      document.getElementById('gasto-metodo-pago').innerHTML = metodos;
+      document.getElementById('recurrente-metodo-pago').innerHTML = metodos;
+      document.getElementById('editar-metodo-pago').innerHTML = metodos;
+      document.getElementById('gasto-fecha').value = fechaLocalHoy();
     }
 
     async function cargarGastos() {
       const lista = document.getElementById('lista-gastos');
       try {
-        gastos = await listarGastos(hogarActivo.id);
+        [gastos, recurrentes] = await Promise.all([listarGastos(hogarActivo.id), listarRecurrentes(hogarActivo.id)]);
         pintarResumen();
-        pintarLista();
+        if (vistaActual === 'lista') pintarLista();
+        else if (vistaActual === 'recurrentes') pintarRecurrentes();
+        else renderCalendario();
       } catch (error) {
         lista.innerHTML = '';
         mostrarMensaje('mensaje', 'No se pudo cargar el historial de gastos: ' + error.message);
@@ -266,7 +501,8 @@
       document.getElementById('stat-presupuesto').textContent = formatearMoneda(r.presupuesto);
       document.getElementById('stat-gastado').textContent = formatearMoneda(r.totalGastado);
       document.getElementById('stat-disponible').textContent = formatearMoneda(Math.max(r.presupuesto - r.totalGastado, 0));
-      document.getElementById('stat-count').textContent = r.countGastosMes;
+      document.getElementById('stat-pendientes').textContent =
+        r.countPendientes > 0 ? `${r.countPendientes} · ${formatearMoneda(r.totalPendiente)}` : '0';
 
       const barra = document.getElementById('barra-presupuesto');
       barra.style.width = Math.min(r.porcentaje, 100) + '%';
@@ -289,16 +525,48 @@
       }
     }
 
+    function formatearFecha(fechaIso) {
+      return new Date(fechaIso + 'T00:00:00').toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+
+    function gastosDelMes(referencia) {
+      const anio = referencia.getFullYear();
+      const mes = referencia.getMonth();
+      return gastos.filter((g) => {
+        const f = new Date(g.fecha + 'T00:00:00');
+        return f.getFullYear() === anio && f.getMonth() === mes;
+      });
+    }
+
     function pintarLista() {
       const lista = document.getElementById('lista-gastos');
-      if (gastos.length === 0) {
-        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no hay gastos registrados.</li>';
+      document.getElementById('lista-titulo-mes').textContent = mesLista.toLocaleDateString('es-CO', {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      let visibles = gastosDelMes(mesLista);
+      if (filtroEstado !== 'todos') visibles = visibles.filter((g) => g.estado === filtroEstado);
+      if (filtroTipo === 'personal') visibles = visibles.filter((g) => g.es_personal);
+      else if (filtroTipo === 'hogar') visibles = visibles.filter((g) => !g.es_personal);
+
+      if (visibles.length === 0) {
+        lista.innerHTML = '<li class="list-group-item text-muted">No hay gastos que coincidan con este mes y filtro.</li>';
         return;
       }
 
-      lista.innerHTML = gastos.map((g) => filaGasto(g)).join('');
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      lista.innerHTML = visibles.map((g) => filaGasto(g, hoy)).join('');
+      conectarAccionesFila(lista);
+    }
 
-      lista.querySelectorAll('[data-eliminar]').forEach((boton) => {
+    function conectarAccionesFila(contenedor) {
+      contenedor.querySelectorAll('[data-eliminar]').forEach((boton) => {
         boton.addEventListener('click', async () => {
           if (!confirm('¿Eliminar este gasto?')) return;
           try {
@@ -309,7 +577,7 @@
           }
         });
       });
-      lista.querySelectorAll('[data-adjuntar-gasto]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-adjuntar-gasto]').forEach((boton) => {
         boton.addEventListener('click', () => {
           gastoIdParaAdjuntar = boton.dataset.adjuntarGasto;
           document.getElementById('form-adjuntar-comprobante-gasto').reset();
@@ -317,7 +585,7 @@
           new bootstrap.Modal(document.getElementById('modal-adjuntar-comprobante-gasto')).show();
         });
       });
-      lista.querySelectorAll('[data-ver-comprobante-gasto]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-ver-comprobante-gasto]').forEach((boton) => {
         boton.addEventListener('click', async () => {
           try {
             const url = await obtenerUrlComprobanteGasto(boton.dataset.verComprobanteGasto);
@@ -327,35 +595,388 @@
           }
         });
       });
+      contenedor.querySelectorAll('[data-pagar-gasto]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+          gastoIdParaPagar = boton.dataset.pagarGasto;
+          esPersonalParaPagar = boton.dataset.personal === '1';
+          document.getElementById('pagar-nombre-gasto').textContent = boton.dataset.nombre;
+          document.getElementById('form-pagar-gasto').reset();
+          limpiarMensaje('mensaje-modal-pagar-gasto');
+          new bootstrap.Modal(document.getElementById('modal-pagar-gasto')).show();
+        });
+      });
+      contenedor.querySelectorAll('[data-reabrir-gasto]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            await reabrirGasto(boton.dataset.reabrirGasto);
+            await cargarGastos();
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo reabrir el gasto: ' + error.message);
+          }
+        });
+      });
+      contenedor.querySelectorAll('[data-editar-gasto]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalEditar(boton.dataset.editarGasto));
+      });
     }
 
-    function filaGasto(g) {
+    function abrirModalEditar(gastoId) {
+      const g = gastos.find((x) => x.id === gastoId);
+      if (!g) return;
+      gastoIdParaEditar = gastoId;
+      limpiarMensaje('mensaje-modal-editar-gasto');
+      document.getElementById('editar-descripcion').value = g.descripcion;
+      document.getElementById('editar-monto').value = Number(g.monto).toLocaleString('es-CO');
+      document.getElementById('editar-fecha').value = g.fecha;
+      document.getElementById('editar-categoria').value = g.categoria;
+      document.getElementById('editar-metodo-pago').value = g.metodo_pago;
+      document.getElementById('editar-referencia').value = g.numero_referencia || '';
+      document.getElementById('editar-enlace-pago').value = g.enlace_pago || '';
+      document.getElementById('editar-observaciones').value = g.observaciones || '';
+      new bootstrap.Modal(document.getElementById('modal-editar-gasto')).show();
+    }
+
+    function filaGasto(g, hoy) {
       const quien = g.registrado_por_perfil?.nombre_completo || g.registrado_por_perfil?.email || '—';
-      const fecha = new Date(g.fecha + 'T00:00:00').toLocaleDateString('es-CO', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
+      const quienPago = g.pagado_por_perfil?.nombre_completo || g.pagado_por_perfil?.email;
+      const vencido = g.estado === 'pendiente' && new Date(g.fecha + 'T00:00:00') < hoy;
+
+      const tipoBadge = g.es_personal
+        ? '<span class="badge text-bg-light border ms-1">👤 Personal</span>'
+        : '<span class="badge text-bg-light border ms-1">🏠 Del hogar</span>';
+      const estadoBadge =
+        g.estado === 'pendiente'
+          ? `<span class="badge ${vencido ? 'text-bg-danger' : 'text-bg-warning'} ms-1">${vencido ? 'Vencido' : 'Pendiente'}</span>`
+          : '';
+
+      const infoSecundaria =
+        g.estado === 'pendiente'
+          ? `Vence ${formatearFecha(g.fecha)} · Registrado por ${escapeHtml(quien)}`
+          : `${formatearFecha(g.fecha_pago || g.fecha)} · ${escapeHtml(etiquetaMetodoPago(g.metodo_pago))} · ${
+              quienPago ? 'Pagado por ' + escapeHtml(quienPago) : 'Registrado por ' + escapeHtml(quien)
+            }`;
+
+      const referenciaInfo = g.numero_referencia
+        ? `<div class="small text-muted">Referencia: ${escapeHtml(g.numero_referencia)}</div>`
+        : '';
+
+      const pagarLinkBtn = g.enlace_pago
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer">💳 Ir a pagar</a>`
+        : '';
+
       const comprobanteBtn = g.comprobante_path
         ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}">📄 Ver comprobante</button>`
-        : `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}">📎 Adjuntar</button>`;
+        : g.estado === 'pagado'
+        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}">📎 Adjuntar</button>`
+        : '';
+
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}">✏️ Editar</button>`;
+
+      const acciones =
+        g.estado === 'pendiente'
+          ? `${pagarLinkBtn}
+             <button class="btn btn-sm btn-domus-primary" data-pagar-gasto="${g.id}" data-nombre="${escapeHtml(g.descripcion)}" data-personal="${g.es_personal ? '1' : '0'}">Marcar pagado</button>
+             ${editarBtn}
+             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`
+          : `${comprobanteBtn}
+             ${g.recurrente_id ? `<button class="btn btn-sm btn-outline-secondary" data-reabrir-gasto="${g.id}">Reabrir</button>` : ''}
+             ${editarBtn}
+             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`;
+
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div>
             <div>
               <strong>${escapeHtml(g.descripcion)}</strong>
               <span class="badge text-bg-light border ms-1">${escapeHtml(etiquetaCategoria(g.categoria))}</span>
+              ${tipoBadge}
+              ${estadoBadge}
             </div>
-            <small class="text-muted">${fecha} · ${escapeHtml(etiquetaMetodoPago(g.metodo_pago))} · Registrado por ${escapeHtml(quien)}</small>
+            <small class="text-muted">${infoSecundaria}</small>
+            ${referenciaInfo}
             ${g.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(g.observaciones)}</div>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="fw-semibold">${formatearMoneda(g.monto)}</span>
-            ${comprobanteBtn}
-            <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>
+            ${acciones}
           </div>
         </li>`;
     }
+
+    // --- Recurrentes -----------------------------------------------------------
+
+    function pintarRecurrentes() {
+      const lista = document.getElementById('lista-recurrentes');
+      if (recurrentes.length === 0) {
+        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no tienes gastos recurrentes.</li>';
+        return;
+      }
+      lista.innerHTML = recurrentes.map(filaRecurrente).join('');
+
+      lista.querySelectorAll('[data-activar]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            await alternarActivoRecurrente(boton.dataset.activar, true);
+            await cargarGastos();
+          } catch (error) {
+            mostrarMensaje('mensaje-recurrentes', 'No se pudo activar: ' + error.message);
+          }
+        });
+      });
+      lista.querySelectorAll('[data-desactivar]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          try {
+            await alternarActivoRecurrente(boton.dataset.desactivar, false);
+            await cargarGastos();
+          } catch (error) {
+            mostrarMensaje('mensaje-recurrentes', 'No se pudo desactivar: ' + error.message);
+          }
+        });
+      });
+      lista.querySelectorAll('[data-eliminar-recurrente]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este gasto recurrente? Los pendientes ya generados no se borran.')) return;
+          try {
+            await eliminarRecurrente(boton.dataset.eliminarRecurrente);
+            await cargarGastos();
+          } catch (error) {
+            mostrarMensaje('mensaje-recurrentes', 'No se pudo eliminar: ' + error.message);
+          }
+        });
+      });
+    }
+
+    function filaRecurrente(r) {
+      const tipoBadge = r.es_personal
+        ? '<span class="badge text-bg-light border ms-1">👤 Personal</span>'
+        : '<span class="badge text-bg-light border ms-1">🏠 Del hogar</span>';
+      const estadoBadge = r.activo
+        ? '<span class="badge text-bg-success ms-1">Activo</span>'
+        : '<span class="badge text-bg-secondary ms-1">Inactivo</span>';
+      const referenciaInfo = r.numero_referencia
+        ? `<div class="small text-muted">Referencia: ${escapeHtml(r.numero_referencia)}</div>`
+        : '';
+      const enlaceInfo = r.enlace_pago
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(r.enlace_pago)}" target="_blank" rel="noopener noreferrer">💳 Enlace de pago</a>`
+        : '';
+      const accionActivo = r.activo
+        ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}">Desactivar</button>`
+        : `<button class="btn btn-sm btn-outline-secondary" data-activar="${r.id}">Activar</button>`;
+
+      return `
+        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <div>
+              <strong>${escapeHtml(r.descripcion)}</strong>
+              <span class="badge text-bg-light border ms-1">${escapeHtml(etiquetaCategoria(r.categoria))}</span>
+              ${tipoBadge}
+              ${estadoBadge}
+            </div>
+            <small class="text-muted">Vence el día ${r.dia_mes} de cada mes · ${escapeHtml(etiquetaMetodoPago(r.metodo_pago))}</small>
+            ${referenciaInfo}
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="fw-semibold">${formatearMoneda(r.monto)}</span>
+            ${enlaceInfo}
+            ${accionActivo}
+            <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}">Eliminar</button>
+          </div>
+        </li>`;
+    }
+
+    document.getElementById('btn-generar-pendientes').addEventListener('click', async () => {
+      limpiarMensaje('mensaje-recurrentes');
+      alternarCargando('btn-generar-pendientes', true);
+      try {
+        const creados = await generarPendientesDelMes(hogarActivo.id);
+        mostrarMensaje(
+          'mensaje-recurrentes',
+          creados > 0 ? `Se generaron ${creados} gasto(s) pendiente(s) del mes.` : 'Ya estaban generados todos los pendientes de este mes.',
+          'success'
+        );
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-recurrentes', 'No se pudieron generar los pendientes: ' + error.message);
+      } finally {
+        alternarCargando('btn-generar-pendientes', false, '🔄 Generar pendientes del mes');
+      }
+    });
+
+    document.getElementById('form-nuevo-recurrente').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-recurrente');
+
+      const descripcion = document.getElementById('recurrente-descripcion').value.trim();
+      const monto = obtenerValorNumerico(document.getElementById('recurrente-monto'));
+      const diaMes = Number(document.getElementById('recurrente-dia-mes').value);
+      const categoria = document.getElementById('recurrente-categoria').value;
+      const metodoPago = document.getElementById('recurrente-metodo-pago').value;
+      const numeroReferencia = document.getElementById('recurrente-referencia').value.trim();
+      const enlacePago = document.getElementById('recurrente-enlace-pago').value.trim();
+      const esPersonal = document.getElementById('recurrente-personal').checked;
+
+      if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
+        mostrarMensaje('mensaje-modal-recurrente', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
+
+      alternarCargando('btn-agregar-recurrente', true);
+      try {
+        await agregarRecurrente(hogarActivo.id, {
+          descripcion,
+          monto,
+          diaMes,
+          categoria,
+          metodoPago,
+          numeroReferencia,
+          enlacePago,
+          esPersonal,
+        });
+        document.getElementById('form-nuevo-recurrente').reset();
+        llenarSelects();
+        bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-recurrente'))?.hide();
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-recurrente', 'No se pudo agregar el recurrente: ' + error.message);
+      } finally {
+        alternarCargando('btn-agregar-recurrente', false, 'Agregar');
+      }
+    });
+
+    // --- Calendario --------------------------------------------------------
+
+    document.getElementById('btn-mes-anterior').addEventListener('click', () => {
+      mesCalendario.setMonth(mesCalendario.getMonth() - 1);
+      diaSeleccionado = null;
+      renderCalendario();
+    });
+    document.getElementById('btn-mes-siguiente').addEventListener('click', () => {
+      mesCalendario.setMonth(mesCalendario.getMonth() + 1);
+      diaSeleccionado = null;
+      renderCalendario();
+    });
+
+    function renderCalendario() {
+      const porFecha = agruparGastosPorFecha(gastos);
+      const anio = mesCalendario.getFullYear();
+      const mes = mesCalendario.getMonth();
+      const hoy = new Date();
+      const hoyStr = fechaLocalHoy(hoy);
+
+      document.getElementById('calendario-titulo-mes').textContent = mesCalendario.toLocaleDateString('es-CO', {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const primerDiaSemana = new Date(anio, mes, 1).getDay();
+      const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+
+      const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      let html = nombresDias.map((d) => `<div class="domus-calendario-dow">${d}</div>`).join('');
+
+      for (let i = 0; i < primerDiaSemana; i++) {
+        html += `<div class="domus-calendario-dia domus-dia-vacio"></div>`;
+      }
+
+      for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fechaStr = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const gastosDia = porFecha.get(fechaStr) || [];
+        const esHoy = fechaStr === hoyStr;
+        const esSeleccionado = fechaStr === diaSeleccionado;
+
+        const dots = gastosDia
+          .map((g) => {
+            const vencido = fechaStr < hoyStr;
+            return `<span class="domus-calendario-dot ${vencido ? 'vencido' : 'pendiente'}"></span>`;
+          })
+          .join('');
+
+        html += `
+          <div class="domus-calendario-dia ${esHoy ? 'domus-dia-hoy' : ''} ${esSeleccionado ? 'domus-dia-seleccionado' : ''}" data-fecha="${fechaStr}">
+            <span>${dia}</span>
+            <span class="domus-calendario-dots">${dots}</span>
+          </div>`;
+      }
+
+      document.getElementById('calendario-grid').innerHTML = html;
+      document.querySelectorAll('#calendario-grid [data-fecha]').forEach((el) => {
+        el.addEventListener('click', () => {
+          diaSeleccionado = el.dataset.fecha;
+          renderCalendario();
+        });
+      });
+
+      pintarDetalleDia(porFecha);
+    }
+
+    function pintarDetalleDia(porFecha) {
+      const contenedor = document.getElementById('calendario-detalle-dia');
+      if (!diaSeleccionado) {
+        contenedor.innerHTML = '';
+        return;
+      }
+      const gastosDia = porFecha.get(diaSeleccionado) || [];
+      const fechaLegible = formatearFecha(diaSeleccionado);
+
+      if (gastosDia.length === 0) {
+        contenedor.innerHTML = `<p class="text-muted">No hay gastos pendientes para el ${fechaLegible}.</p>`;
+        return;
+      }
+
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      contenedor.innerHTML = `
+        <h6 class="mb-2">Pendientes del ${fechaLegible}</h6>
+        <ul class="list-group">${gastosDia.map((g) => filaGasto(g, hoy)).join('')}</ul>`;
+
+      conectarAccionesFila(contenedor);
+    }
+
+    // --- Tabs ----------------------------------------------------------------
+
+    document.querySelectorAll('#tabs-gastos [data-vista]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        vistaActual = boton.dataset.vista;
+        document.querySelectorAll('#tabs-gastos .nav-link').forEach((b) => b.classList.remove('active'));
+        boton.classList.add('active');
+
+        document.getElementById('vista-lista').style.display = vistaActual === 'lista' ? '' : 'none';
+        document.getElementById('vista-recurrentes').style.display = vistaActual === 'recurrentes' ? '' : 'none';
+        document.getElementById('vista-calendario').style.display = vistaActual === 'calendario' ? '' : 'none';
+
+        if (vistaActual === 'lista') pintarLista();
+        else if (vistaActual === 'recurrentes') pintarRecurrentes();
+        else renderCalendario();
+      });
+    });
+
+    document.getElementById('btn-lista-mes-anterior').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() - 1);
+      pintarLista();
+    });
+    document.getElementById('btn-lista-mes-siguiente').addEventListener('click', () => {
+      mesLista.setMonth(mesLista.getMonth() + 1);
+      pintarLista();
+    });
+
+    document.querySelectorAll('#filtro-estado [data-estado]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        filtroEstado = boton.dataset.estado;
+        document.querySelectorAll('#filtro-estado button').forEach((b) => b.classList.remove('active'));
+        boton.classList.add('active');
+        pintarLista();
+      });
+    });
+    document.querySelectorAll('#filtro-tipo [data-tipo]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        filtroTipo = boton.dataset.tipo;
+        document.querySelectorAll('#filtro-tipo button').forEach((b) => b.classList.remove('active'));
+        boton.classList.add('active');
+        pintarLista();
+      });
+    });
+
+    // --- Formularios de gasto del momento / pago / comprobante ---------------
 
     document.getElementById('form-nuevo-gasto').addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -367,14 +988,15 @@
       const categoria = document.getElementById('gasto-categoria').value;
       const metodoPago = document.getElementById('gasto-metodo-pago').value;
       const observaciones = document.getElementById('gasto-observaciones').value.trim();
+      const esPersonal = document.getElementById('gasto-personal').checked;
 
       const archivoComprobante = document.getElementById('gasto-comprobante').files[0];
 
       alternarCargando('btn-agregar-gasto', true);
       try {
-        const gasto = await agregarGasto(hogarActivo.id, { descripcion, monto, fecha, categoria, metodoPago, observaciones });
+        const gasto = await agregarGasto(hogarActivo.id, { descripcion, monto, fecha, categoria, metodoPago, observaciones, esPersonal });
         if (archivoComprobante) {
-          await subirComprobanteGasto(hogarActivo.id, gasto.id, archivoComprobante);
+          await subirComprobanteGasto(hogarActivo.id, gasto.id, archivoComprobante, esPersonal);
         }
         document.getElementById('form-nuevo-gasto').reset();
         llenarSelects();
@@ -387,21 +1009,82 @@
       }
     });
 
+    document.getElementById('form-editar-gasto').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-editar-gasto');
+
+      const descripcion = document.getElementById('editar-descripcion').value.trim();
+      const monto = obtenerValorNumerico(document.getElementById('editar-monto'));
+      const fecha = document.getElementById('editar-fecha').value;
+      const categoria = document.getElementById('editar-categoria').value;
+      const metodoPago = document.getElementById('editar-metodo-pago').value;
+      const numeroReferencia = document.getElementById('editar-referencia').value.trim();
+      const enlacePago = document.getElementById('editar-enlace-pago').value.trim();
+      const observaciones = document.getElementById('editar-observaciones').value.trim();
+
+      if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
+        mostrarMensaje('mensaje-modal-editar-gasto', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
+
+      alternarCargando('btn-guardar-editar-gasto', true);
+      try {
+        await actualizarGasto(gastoIdParaEditar, {
+          descripcion,
+          monto,
+          fecha,
+          categoria,
+          metodo_pago: metodoPago,
+          numero_referencia: numeroReferencia || null,
+          enlace_pago: enlacePago || null,
+          observaciones: observaciones || null,
+        });
+        bootstrap.Modal.getInstance(document.getElementById('modal-editar-gasto'))?.hide();
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-editar-gasto', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-editar-gasto', false, 'Guardar cambios');
+      }
+    });
+
     document.getElementById('form-adjuntar-comprobante-gasto').addEventListener('submit', async (evento) => {
       evento.preventDefault();
       limpiarMensaje('mensaje-modal-adjuntar-gasto');
       const archivo = document.getElementById('adjuntar-comprobante-gasto').files[0];
       if (!archivo) return;
 
+      const gastoActual = gastos.find((g) => g.id === gastoIdParaAdjuntar);
+
       alternarCargando('btn-guardar-comprobante-gasto', true);
       try {
-        await subirComprobanteGasto(hogarActivo.id, gastoIdParaAdjuntar, archivo);
+        await subirComprobanteGasto(hogarActivo.id, gastoIdParaAdjuntar, archivo, gastoActual?.es_personal ?? false);
         bootstrap.Modal.getInstance(document.getElementById('modal-adjuntar-comprobante-gasto'))?.hide();
         await cargarGastos();
       } catch (error) {
         mostrarMensaje('mensaje-modal-adjuntar-gasto', 'No se pudo subir el comprobante: ' + error.message);
       } finally {
         alternarCargando('btn-guardar-comprobante-gasto', false, 'Subir');
+      }
+    });
+
+    document.getElementById('form-pagar-gasto').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-pagar-gasto');
+      const archivo = document.getElementById('pagar-comprobante-gasto').files[0];
+
+      alternarCargando('btn-confirmar-pago-gasto', true);
+      try {
+        await marcarGastoPagado(gastoIdParaPagar);
+        if (archivo) {
+          await subirComprobanteGasto(hogarActivo.id, gastoIdParaPagar, archivo, esPersonalParaPagar);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('modal-pagar-gasto'))?.hide();
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-pagar-gasto', 'No se pudo registrar el pago: ' + error.message);
+      } finally {
+        alternarCargando('btn-confirmar-pago-gasto', false, 'Confirmar pago');
       }
     });
 
