@@ -3,6 +3,11 @@
 // ============================================================================
 import { supabase } from './supabaseClient.js';
 
+// js/auth.js siempre vive en <raíz-del-sitio>/js/, así que esta URL sirve
+// para construir rutas absolutas correctas sin importar desde qué página
+// (raíz o subcarpeta como mercado/) se haya importado este módulo.
+const RAIZ_SITIO = new URL('../', import.meta.url);
+
 /** Crea una cuenta nueva. El trigger handle_new_user (SQL) crea el perfil solo. */
 export async function registrar(email, password, nombreCompleto) {
   const { data, error } = await supabase.auth.signUp({
@@ -31,14 +36,12 @@ export async function cerrarSesion() {
 /** Envía un correo con enlace para restablecer la contraseña. */
 export async function solicitarRecuperacion(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    // Resuelve a la ruta correcta sin importar si el sitio vive en la raíz
-    // del dominio o en un subdirectorio (típico de GitHub Pages: /domus/).
-    redirectTo: new URL('nueva-password.html', window.location.href).toString(),
+    redirectTo: new URL('nueva-password/', RAIZ_SITIO).toString(),
   });
   if (error) throw error;
 }
 
-/** Se usa en nueva-password.html, después de que el usuario llega desde el correo. */
+/** Se usa en nueva-password/, después de que el usuario llega desde el correo. */
 export async function actualizarPassword(nuevaPassword) {
   const { error } = await supabase.auth.updateUser({ password: nuevaPassword });
   if (error) throw error;
@@ -56,12 +59,12 @@ export async function obtenerUsuarioActual() {
 
 /**
  * Guard de página: llama esto al inicio de cualquier página protegida.
- * Si no hay sesión, redirige a index.html (login) y detiene la ejecución.
+ * Si no hay sesión, redirige al login (raíz del sitio) y detiene la ejecución.
  */
 export async function protegerPagina() {
   const sesion = await obtenerSesion();
   if (!sesion) {
-    window.location.href = 'index.html';
+    window.location.href = RAIZ_SITIO.toString();
     return null;
   }
   return sesion;

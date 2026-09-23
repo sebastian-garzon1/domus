@@ -100,7 +100,7 @@ export function limpiarHogarActivo() {
 
 /**
  * Devuelve el hogar activo verificando que el usuario siga perteneciendo a él.
- * Si no hay hogar activo válido, devuelve null (la página debe mandar a hogares.html).
+ * Si no hay hogar activo válido, devuelve null (la página debe mandar a hogares/).
  */
 export async function obtenerHogarActivoValidado() {
   const hogarId = obtenerHogarActivoId();

@@ -34,14 +34,14 @@
             <input type="password" class="form-control" id="password" required autocomplete="current-password" minlength="6" />
           </div>
           <div class="d-flex justify-content-end mb-3">
-            <a href="recuperar.html" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+            <a href="recuperar/" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
           </div>
           <button type="submit" id="btn-login" class="btn btn-domus-primary w-100">Iniciar sesión</button>
         </form>
 
         <hr class="my-4" />
         <p class="text-center mb-0">
-          ¿No tienes cuenta? <a href="registro.html" class="text-decoration-none">Regístrate</a>
+          ¿No tienes cuenta? <a href="registro/" class="text-decoration-none">Regístrate</a>
         </p>
       </div>
     </div>
@@ -55,7 +55,7 @@
 
     // Si ya hay sesión activa, saltar directo a la app
     obtenerSesion().then((sesion) => {
-      if (sesion) window.location.href = 'hogares.html';
+      if (sesion) window.location.href = 'hogares/';
     });
 
     document.getElementById('form-login').addEventListener('submit', async (evento) => {
@@ -67,7 +67,7 @@
       alternarCargando('btn-login', true);
       try {
         await iniciarSesion(email, password);
-        window.location.href = 'hogares.html';
+        window.location.href = 'hogares/';
       } catch (error) {
         mostrarMensaje('mensaje', traducirErrorAuth(error));
         alternarCargando('btn-login', false, 'Iniciar sesión');

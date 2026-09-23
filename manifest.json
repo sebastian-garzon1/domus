@@ -2,7 +2,7 @@
   "name": "Domus — Administración del hogar",
   "short_name": "Domus",
   "description": "Centro de gestión del hogar: mercado, gastos, presupuesto, servicios, calendario e inventario.",
-  "start_url": "./hogares.html",
+  "start_url": "./hogares/",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

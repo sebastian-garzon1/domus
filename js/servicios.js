@@ -115,7 +115,7 @@ export async function eliminarComprobante(servicioId, path) {
   await actualizarServicio(servicioId, { comprobante_path: null });
 }
 
-/** Resumen para el dashboard y las tarjetas de servicios.html. */
+/** Resumen para el dashboard y las tarjetas de servicios/. */
 export function calcularResumenServicios(servicios) {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -144,7 +144,7 @@ export function calcularResumenServicios(servicios) {
 
 /**
  * Agrupa los servicios por su fecha de vencimiento ("YYYY-MM-DD" -> lista),
- * para pintar el calendario mensual de servicios.html.
+ * para pintar el calendario mensual de servicios/.
  */
 export function agruparServiciosPorFecha(servicios) {
   const porFecha = new Map();

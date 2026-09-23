@@ -79,7 +79,7 @@ su propia RLS.
 En **Authentication → URL Configuration**:
 
 - **Site URL**: la URL donde vas a publicar el sitio (ej. `https://tu-usuario.github.io/domus/`).
-- **Redirect URLs**: agrega también `https://tu-usuario.github.io/domus/nueva-password.html`.
+- **Redirect URLs**: agrega también `https://tu-usuario.github.io/domus/nueva-password/`.
 
 En **Authentication → Providers → Email**, mientras desarrollas puedes
 desactivar "Confirm email" para poder probar registro/login sin revisar
@@ -132,19 +132,25 @@ contraseña no van a redirigir bien.
 
 ## Estructura del proyecto
 
+Cada página (salvo el login) vive en su propia carpeta como `index.html`,
+para que la URL final no muestre la extensión `.html` (ej.
+`tu-usuario.github.io/domus/mercado/` en vez de `.../mercado.html`). Todos
+los enlaces internos, el service worker y el manifest ya están ajustados a
+esta estructura.
+
 ```
 domus/
-├── index.html            Login
-├── registro.html         Crear cuenta
-├── recuperar.html        Solicitar recuperación de contraseña
-├── nueva-password.html   Definir nueva contraseña (llega desde el correo)
-├── hogares.html           Crear / listar / seleccionar hogar
-├── dashboard.html         Panel principal del hogar activo (con placeholders de módulos)
-├── miembros.html          Ver e invitar miembros del hogar activo
-├── perfil.html             Editar nombre del perfil
-├── mercado.html            Mercado y lista de compras del hogar activo
-├── gastos.html             Gastos y presupuesto mensual del hogar activo
-├── servicios.html          Servicios y pagos recurrentes del hogar activo
+├── index.html              Login (única página en la raíz)
+├── registro/index.html     Crear cuenta
+├── recuperar/index.html    Solicitar recuperación de contraseña
+├── nueva-password/index.html  Definir nueva contraseña (llega desde el correo)
+├── hogares/index.html      Crear / listar / seleccionar hogar
+├── dashboard/index.html    Panel principal del hogar activo
+├── miembros/index.html     Ver e invitar miembros del hogar activo
+├── perfil/index.html       Editar perfil (foto, nombre, teléfono, dirección, contraseña)
+├── mercado/index.html      Mercado y lista de compras del hogar activo
+├── gastos/index.html       Gastos y presupuesto mensual del hogar activo
+├── servicios/index.html    Servicios y pagos recurrentes del hogar activo
 ├── manifest.json           Configuración PWA
 ├── sw.js                   Service worker (cachea el app shell)
 ├── css/styles.css          Tema oscuro neumórfico + layout de sidebar/offcanvas
