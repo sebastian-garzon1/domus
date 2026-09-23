@@ -7,9 +7,17 @@ const CLAVE_HOGAR_ACTIVO = 'domus_hogar_activo';
 
 /** Lista los hogares a los que pertenece el usuario autenticado, con su rol. */
 export async function listarMisHogares() {
+  const { data: usuario } = await supabase.auth.getUser();
+  if (!usuario?.user) throw new Error('No hay sesión activa');
+
+  // Importante: filtrar por usuario_id. La política RLS de hogar_miembros
+  // permite ver TODAS las filas de un hogar al que perteneces (la necesita
+  // la página de Miembros), así que sin este filtro un hogar con varios
+  // integrantes aparecería duplicado una vez por cada miembro.
   const { data, error } = await supabase
     .from('hogar_miembros')
     .select('rol, hogar:hogares(id, nombre, descripcion, presupuesto_mensual, creado_por)')
+    .eq('usuario_id', usuario.user.id)
     .order('unido_en', { ascending: true });
   if (error) throw error;
   return data.map((fila) => ({ ...fila.hogar, mi_rol: fila.rol }));
