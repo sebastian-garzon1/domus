@@ -154,6 +154,25 @@ textarea.form-control {
   letter-spacing: -0.02em;
 }
 
+/* Crédito de marca ("Sebas Dev © 2026") */
+.domus-footer-credit {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0.85rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--domus-text-muted);
+  pointer-events: none;
+}
+
+.domus-sidebar-credit {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--domus-text-muted);
+  margin-top: 0.75rem;
+}
+
 /* --- Shell de la app: sidebar fija (desktop) + topbar/offcanvas (móvil) --- */
 
 .domus-app-shell {
