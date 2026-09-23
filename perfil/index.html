@@ -135,13 +135,7 @@
   <script type="module">
     import { protegerPagina, obtenerUsuarioActual, cerrarSesion, actualizarPassword } from '../js/auth.js';
     import { supabase } from '../js/supabaseClient.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando } from '../js/ui.js';
-
-    const AVATAR_PLACEHOLDER =
-      'data:image/svg+xml;utf8,' +
-      encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#30363d"/><text x="50%" y="54%" font-size="40" text-anchor="middle" fill="#8d93a0" font-family="sans-serif" dy=".1em">?</text></svg>`
-      );
+    import { mostrarMensaje, limpiarMensaje, alternarCargando, AVATAR_PLACEHOLDER } from '../js/ui.js';
 
     async function salir() {
       await cerrarSesion();

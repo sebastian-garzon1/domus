@@ -16,6 +16,13 @@ export function fechaLocalHoy(referencia = new Date()) {
   return `${anio}-${mes}-${dia}`;
 }
 
+/** Silueta genérica para cuando un perfil no tiene foto (perfil.js, miembros.js). */
+export const AVATAR_PLACEHOLDER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#30363d"/><text x="50%" y="54%" font-size="40" text-anchor="middle" fill="#8d93a0" font-family="sans-serif" dy=".1em">?</text></svg>`
+  );
+
 /** Muestra un mensaje de error/éxito dentro de un contenedor Bootstrap. */
 export function mostrarMensaje(contenedorId, texto, tipo = 'danger') {
   const contenedor = document.getElementById(contenedorId);

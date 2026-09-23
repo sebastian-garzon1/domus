@@ -96,6 +96,16 @@
     </div>
   </div>
 
+  <!-- Modal: ver foto de perfil en grande -->
+  <div class="modal fade" id="modal-avatar-expandido" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-transparent border-0">
+        <button type="button" class="btn-close btn-close-white ms-auto me-2 mt-2" data-bs-dismiss="modal"></button>
+        <img id="avatar-expandido-img" src="" alt="Foto de perfil" class="img-fluid rounded-circle mx-auto mb-3" style="max-width: 320px; aspect-ratio: 1; object-fit: cover;" />
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
     import { protegerPagina, obtenerUsuarioActual, cerrarSesion } from '../js/auth.js';
@@ -105,7 +115,7 @@
       invitarMiembro,
       eliminarMiembro,
     } from '../js/hogares.js';
-    import { mostrarMensaje, limpiarMensaje, alternarCargando } from '../js/ui.js';
+    import { mostrarMensaje, limpiarMensaje, alternarCargando, AVATAR_PLACEHOLDER } from '../js/ui.js';
 
     async function salir() {
       await cerrarSesion();
@@ -146,11 +156,15 @@
           .map((m) => {
             const puedeQuitar =
               hogarActivo.mi_rol === 'administrador' || m.perfil.id === usuarioActualId;
+            const avatarUrl = m.perfil.avatar_url || AVATAR_PLACEHOLDER;
             return `
               <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <div>${escapeHtml(m.perfil.nombre_completo || m.perfil.email)}</div>
-                  <small class="text-muted">${escapeHtml(m.perfil.email)}</small>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="${escapeHtml(avatarUrl)}" alt="Foto de ${escapeHtml(m.perfil.nombre_completo || m.perfil.email)}" class="domus-avatar-mini" data-expandir-avatar="${escapeHtml(avatarUrl)}" />
+                  <div>
+                    <div>${escapeHtml(m.perfil.nombre_completo || m.perfil.email)}</div>
+                    <small class="text-muted">${escapeHtml(m.perfil.email)}</small>
+                  </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="badge text-bg-light border">${m.rol}</span>
@@ -165,6 +179,13 @@
               </li>`;
           })
           .join('');
+
+        lista.querySelectorAll('[data-expandir-avatar]').forEach((img) => {
+          img.addEventListener('click', () => {
+            document.getElementById('avatar-expandido-img').src = img.dataset.expandirAvatar;
+            new bootstrap.Modal(document.getElementById('modal-avatar-expandido')).show();
+          });
+        });
 
         lista.querySelectorAll('[data-quitar]').forEach((boton) => {
           boton.addEventListener('click', async () => {
