@@ -4,7 +4,7 @@
 // solo se intercepta lo que es del mismo origen (HTML/CSS/JS/íconos).
 // ============================================================================
 
-const VERSION = 'domus-v7';
+const VERSION = 'domus-v8';
 const CACHE_SHELL = `${VERSION}-shell`;
 
 const ARCHIVOS_SHELL = [

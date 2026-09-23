@@ -158,6 +158,23 @@ textarea.form-control {
   letter-spacing: -0.02em;
 }
 
+.domus-auth-logo {
+  display: block;
+  margin: 0 auto 0.75rem;
+  height: 96px;
+  width: 96px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.domus-sidebar-brand-logo {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* Crédito de marca ("Sebas Dev © 2026") */
 .domus-footer-credit {
   position: fixed;

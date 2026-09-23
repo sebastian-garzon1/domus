@@ -15,7 +15,7 @@
 <body>
   <div class="domus-app-shell">
     <aside class="domus-sidebar d-none d-md-flex flex-column">
-      <a href="../dashboard/" class="domus-sidebar-brand">🏠 Domus</a>
+      <a href="../dashboard/" class="domus-sidebar-brand"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</a>
       <nav class="domus-sidebar-nav flex-grow-1">
         <a href="../dashboard/" class="domus-sidebar-link active">🏠 Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link">🛒 Mercado</a>
@@ -32,7 +32,7 @@
     <div class="domus-content-col">
       <div class="domus-topbar-mobile d-flex d-md-none align-items-center justify-content-between">
         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">☰</button>
-        <span class="domus-sidebar-brand mb-0">🏠 Domus</span>
+        <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
         <span style="width: 38px"></span>
       </div>
 
@@ -41,7 +41,7 @@
 
     <div class="mb-4">
       <p class="text-muted mb-1">Hogar activo</p>
-      <h2 id="nombre-hogar" class="mb-0">Cargando...</h2>
+      <h2 id="nombre-hogar" class="mb-0"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</h2>
     </div>
 
     <!-- Resumen rápido: se conecta a datos reales cuando exista el módulo de gastos/presupuesto -->
@@ -49,25 +49,25 @@
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
           <span class="text-muted small">Presupuesto mensual</span>
-          <span id="stat-presupuesto" class="h4 mb-0 mt-1">—</span>
+          <span id="stat-presupuesto" class="h4 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
           <span class="text-muted small">Gastado este mes</span>
-          <span id="stat-gastado-mes" class="h4 mb-0 mt-1">—</span>
+          <span id="stat-gastado-mes" class="h4 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
           <span class="text-muted small">Pendiente en mercado</span>
-          <span id="stat-mercado-pendiente" class="h4 mb-0 mt-1 text-muted">—</span>
+          <span id="stat-mercado-pendiente" class="h4 mb-0 mt-1 text-muted"><span class="spinner-border spinner-border-sm"></span></span>
         </div>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
           <span class="text-muted small">Próximo pago</span>
-          <span id="stat-proximo-pago" class="h6 mb-0 mt-1">—</span>
+          <span id="stat-proximo-pago" class="h6 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
         </div>
       </div>
     </div>
@@ -122,7 +122,7 @@
 
     <div class="offcanvas offcanvas-start domus-sidebar-offcanvas d-md-none" tabindex="-1" id="sidebarOffcanvas">
       <div class="offcanvas-header">
-        <span class="domus-sidebar-brand mb-0">🏠 Domus</span>
+        <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
       </div>
       <div class="offcanvas-body d-flex flex-column">
@@ -174,6 +174,10 @@
         await cargarResumenServicios(hogar.id);
       } catch (error) {
         mostrarMensaje('mensaje', 'No se pudo cargar el hogar: ' + error.message);
+        document.getElementById('nombre-hogar').textContent = '—';
+        for (const id of ['stat-presupuesto', 'stat-gastado-mes', 'stat-mercado-pendiente', 'stat-proximo-pago']) {
+          document.getElementById(id).textContent = '—';
+        }
       }
     }
 
@@ -184,6 +188,7 @@
         document.getElementById('stat-mercado-pendiente').textContent = formatearMoneda(totalEstimadoPendientes);
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.
+        document.getElementById('stat-mercado-pendiente').textContent = '—';
       }
     }
 
@@ -194,6 +199,7 @@
         document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastado);
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.
+        document.getElementById('stat-gastado-mes').textContent = '—';
       }
     }
 
@@ -206,6 +212,7 @@
           : 'Sin pendientes';
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.
+        document.getElementById('stat-proximo-pago').textContent = '—';
       }
     }
   </script>
