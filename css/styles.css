@@ -204,6 +204,11 @@ textarea.form-control {
   color: var(--domus-text-muted);
   pointer-events: none;
 }
+.domus-footer-credit a {
+  color: inherit;
+  pointer-events: auto;
+  text-decoration: underline dotted;
+}
 
 .domus-sidebar-credit {
   text-align: center;
