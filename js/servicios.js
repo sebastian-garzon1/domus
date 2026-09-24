@@ -155,3 +155,109 @@ export function agruparServiciosPorFecha(servicios) {
   }
   return porFecha;
 }
+
+// --- Servicios recurrentes (plantillas mensuales) ---------------------------
+
+export async function listarRecurrentes(hogarId) {
+  const { data, error } = await supabase
+    .from('servicios_recurrentes')
+    .select('*')
+    .eq('hogar_id', hogarId)
+    .order('dia_mes', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function agregarRecurrente(hogarId, campos) {
+  const { data: usuario } = await supabase.auth.getUser();
+  if (!usuario?.user) throw new Error('No hay sesión activa');
+
+  const { data, error } = await supabase
+    .from('servicios_recurrentes')
+    .insert({
+      hogar_id: hogarId,
+      nombre: campos.nombre,
+      categoria: campos.categoria || 'otros',
+      monto: campos.monto,
+      dia_mes: campos.diaMes,
+      numero_referencia: campos.numeroReferencia || null,
+      enlace_pago: campos.enlacePago || null,
+      creado_por: usuario.user.id,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function actualizarRecurrente(recurrenteId, cambios) {
+  const { error } = await supabase.from('servicios_recurrentes').update(cambios).eq('id', recurrenteId);
+  if (error) throw error;
+}
+
+export async function alternarActivoRecurrente(recurrenteId, activo) {
+  await actualizarRecurrente(recurrenteId, { activo });
+}
+
+export async function eliminarRecurrente(recurrenteId) {
+  const { error } = await supabase.from('servicios_recurrentes').delete().eq('id', recurrenteId);
+  if (error) throw error;
+}
+
+/** Día de vencimiento de este mes, topando al último día real del mes. */
+function fechaDelMes(diaMes, referencia = new Date()) {
+  const anio = referencia.getFullYear();
+  const mes = referencia.getMonth();
+  const ultimoDiaMes = new Date(anio, mes + 1, 0).getDate();
+  const dia = Math.min(diaMes, ultimoDiaMes);
+  return `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+}
+
+/**
+ * Genera el pago pendiente del mes actual para cada plantilla activa que
+ * todavía no lo tenga (botón "Generar pendientes del mes"). Devuelve cuántos
+ * se crearon.
+ */
+export async function generarPendientesDelMes(hogarId) {
+  const { data: usuario } = await supabase.auth.getUser();
+  if (!usuario?.user) throw new Error('No hay sesión activa');
+
+  const [recurrentes, serviciosExistentes] = await Promise.all([
+    listarRecurrentes(hogarId),
+    listarServicios(hogarId),
+  ]);
+
+  const activas = recurrentes.filter((r) => r.activo);
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+  const anioActual = hoy.getFullYear();
+
+  const yaGenerados = new Set(
+    serviciosExistentes
+      .filter((s) => s.recurrente_id)
+      .filter((s) => {
+        const f = new Date(s.fecha_vencimiento + 'T00:00:00');
+        return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+      })
+      .map((s) => s.recurrente_id)
+  );
+
+  const pendientesPorCrear = activas.filter((r) => !yaGenerados.has(r.id));
+  if (pendientesPorCrear.length === 0) return 0;
+
+  const filas = pendientesPorCrear.map((r) => ({
+    hogar_id: hogarId,
+    nombre: r.nombre,
+    categoria: r.categoria,
+    monto: r.monto,
+    fecha_vencimiento: fechaDelMes(r.dia_mes, hoy),
+    numero_referencia: r.numero_referencia,
+    enlace_pago: r.enlace_pago,
+    recurrente_id: r.id,
+    registrado_por: usuario.user.id,
+  }));
+
+  const { error } = await supabase.from('servicios_pagos').insert(filas);
+  if (error) throw error;
+  return filas.length;
+}

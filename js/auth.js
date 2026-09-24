@@ -15,6 +15,10 @@ export async function registrar(email, password, nombreCompleto) {
     password,
     options: {
       data: { nombre_completo: nombreCompleto },
+      // Igual que en solicitarRecuperacion(): sin esto, el enlace del correo
+      // de confirmación usa el "Site URL" configurado en Supabase (que puede
+      // haber quedado en localhost) sin importar desde dónde se registre.
+      emailRedirectTo: RAIZ_SITIO.toString(),
     },
   });
   if (error) throw error;
