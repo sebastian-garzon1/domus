@@ -73,7 +73,3 @@ export async function protegerPagina() {
   }
   return sesion;
 }
-
-export function escucharCambiosDeSesion(callback) {
-  return supabase.auth.onAuthStateChange((_evento, sesion) => callback(sesion));
-}

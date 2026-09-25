@@ -68,15 +68,6 @@ export async function invitarMiembro(hogarId, email, rol = 'miembro') {
   return data;
 }
 
-export async function cambiarRolMiembro(hogarId, usuarioId, nuevoRol) {
-  const { error } = await supabase
-    .from('hogar_miembros')
-    .update({ rol: nuevoRol })
-    .eq('hogar_id', hogarId)
-    .eq('usuario_id', usuarioId);
-  if (error) throw error;
-}
-
 /** Quita a un miembro del hogar (o permite que uno mismo se salga). */
 export async function eliminarMiembro(hogarId, usuarioId) {
   const { error } = await supabase
@@ -87,14 +78,9 @@ export async function eliminarMiembro(hogarId, usuarioId) {
   if (error) throw error;
 }
 
-export async function actualizarHogar(hogarId, cambios) {
-  const { error } = await supabase.from('hogares').update(cambios).eq('id', hogarId);
-  if (error) throw error;
-}
-
 // --- Hogar activo (cuál está viendo el usuario ahora mismo) ----------------
 
-export function obtenerHogarActivoId() {
+function obtenerHogarActivoId() {
   return localStorage.getItem(CLAVE_HOGAR_ACTIVO);
 }
 
@@ -102,7 +88,7 @@ export function fijarHogarActivo(hogarId) {
   localStorage.setItem(CLAVE_HOGAR_ACTIVO, hogarId);
 }
 
-export function limpiarHogarActivo() {
+function limpiarHogarActivo() {
   localStorage.removeItem(CLAVE_HOGAR_ACTIVO);
 }
 

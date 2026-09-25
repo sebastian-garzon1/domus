@@ -109,12 +109,6 @@ export async function obtenerUrlComprobante(path) {
   return data.signedUrl;
 }
 
-export async function eliminarComprobante(servicioId, path) {
-  const { error } = await supabase.storage.from(BUCKET).remove([path]);
-  if (error) throw error;
-  await actualizarServicio(servicioId, { comprobante_path: null });
-}
-
 /** Resumen para el dashboard y las tarjetas de servicios/. */
 export function calcularResumenServicios(servicios) {
   const hoy = new Date();
@@ -191,7 +185,7 @@ export async function agregarRecurrente(hogarId, campos) {
   return data;
 }
 
-export async function actualizarRecurrente(recurrenteId, cambios) {
+async function actualizarRecurrente(recurrenteId, cambios) {
   const { error } = await supabase.from('servicios_recurrentes').update(cambios).eq('id', recurrenteId);
   if (error) throw error;
 }

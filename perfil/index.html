@@ -9,6 +9,8 @@
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
   <link rel="icon" href="../icons/icon-192.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="../css/styles.css" rel="stylesheet" />
   <script type="module" src="../js/register-sw.js"></script>
 </head>
@@ -17,13 +19,13 @@
     <aside class="domus-sidebar d-none d-md-flex flex-column">
       <a href="../dashboard/" class="domus-sidebar-brand"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</a>
       <nav class="domus-sidebar-nav flex-grow-1">
-        <a href="../dashboard/" class="domus-sidebar-link">🏠 Inicio</a>
-        <a href="../mercado/" class="domus-sidebar-link">🛒 Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link">💰 Gastos</a>
-        <a href="../servicios/" class="domus-sidebar-link">🧾 Servicios</a>
-        <a href="../miembros/" class="domus-sidebar-link">👥 Miembros</a>
-        <a href="../hogares/" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
-        <a href="../perfil/" class="domus-sidebar-link active">⚙️ Mi perfil</a>
+        <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+        <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+        <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+        <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+        <a href="../perfil/" class="domus-sidebar-link active"><i class="bi bi-gear"></i> Mi perfil</a>
       </nav>
       <button id="btn-salir" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
       <div class="domus-sidebar-credit">Sebas Dev © 2026</div>
@@ -31,7 +33,7 @@
 
     <div class="domus-content-col">
       <div class="domus-topbar-mobile d-flex d-md-none align-items-center justify-content-between">
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">☰</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"><i class="bi bi-list"></i></button>
         <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
         <span style="width: 38px"></span>
       </div>
@@ -47,7 +49,7 @@
           <div class="d-flex align-items-center gap-3 mb-2">
             <div class="domus-avatar-wrap">
               <img id="avatar-preview" class="domus-avatar" alt="Foto de perfil" />
-              <button type="button" id="btn-cambiar-foto" class="domus-avatar-editar" title="Cambiar foto">📷</button>
+              <button type="button" id="btn-cambiar-foto" class="domus-avatar-editar" title="Cambiar foto"><i class="bi bi-camera"></i></button>
               <input type="file" id="input-avatar" accept="image/*" class="d-none" />
             </div>
             <div>
@@ -117,13 +119,13 @@
       </div>
       <div class="offcanvas-body d-flex flex-column">
         <nav class="domus-sidebar-nav flex-grow-1">
-          <a href="../dashboard/" class="domus-sidebar-link">🏠 Inicio</a>
-          <a href="../mercado/" class="domus-sidebar-link">🛒 Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link">💰 Gastos</a>
-          <a href="../servicios/" class="domus-sidebar-link">🧾 Servicios</a>
-          <a href="../miembros/" class="domus-sidebar-link">👥 Miembros</a>
-          <a href="../hogares/" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
-          <a href="../perfil/" class="domus-sidebar-link active">⚙️ Mi perfil</a>
+          <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+          <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+          <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+          <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+          <a href="../perfil/" class="domus-sidebar-link active"><i class="bi bi-gear"></i> Mi perfil</a>
         </nav>
         <button id="btn-salir-movil" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
         <div class="domus-sidebar-credit">Sebas Dev © 2026</div>

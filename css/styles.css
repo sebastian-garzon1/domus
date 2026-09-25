@@ -1,93 +1,95 @@
 /* ============================================================================
    DOMUS — Estilos compartidos (encima de Bootstrap 5)
-   Tema oscuro neumórfico ("soft-UI"): un único color de fondo para toda la
-   superficie (body, sidebar, tarjetas, modales...) — lo que da la sensación
-   de volumen 3D son pares de sombras (una clara arriba-izquierda, una oscura
-   abajo-derecha) que hacen que los elementos parezcan "salir" o "hundirse"
-   del fondo, en vez de bordes o cambios de color de superficie.
+   Superficie plana, bordes finos y radios pequeños — sin sombras de bulto ni
+   degradados. Tipografía: IBM Plex Sans para interfaz, IBM Plex Mono para
+   cifras (dinero, fechas, referencias), para que los números se lean como
+   datos y no como texto corrido.
    ============================================================================ */
 
 :root {
-  --domus-bg: #262a34;              /* único color de fondo: body, sidebar, tarjetas... */
-  --domus-text: #eceef2;
-  --domus-text-muted: #9aa0ad;
+  --domus-bg: #141414;             /* fondo de página */
+  --domus-surface: #1b1b1b;        /* sidebar, tarjetas, modales */
+  --domus-surface-2: #232323;      /* hover / superficie anidada */
+  --domus-text: #ececea;
+  --domus-text-muted: #8f8f8b;
 
-  --domus-shadow-dark: rgba(0, 0, 0, 0.55);
-  --domus-shadow-light: rgba(255, 255, 255, 0.07);
+  --domus-border: rgba(255, 255, 255, 0.08);
+  --domus-border-strong: rgba(255, 255, 255, 0.16);
 
-  --domus-primary: #2ea043;         /* verde para botones (contraste con blanco) */
-  --domus-primary-hover: #35b94d;
-  --domus-primary-text: #4cc161;    /* verde más claro para texto/acentos */
-  --domus-primary-soft: rgba(76, 193, 97, 0.14);
-  --domus-accent: #d29922;          /* ámbar para prioridades/alertas */
+  --domus-primary: #2fbf7d;
+  --domus-primary-hover: #29ab70;
+  --domus-primary-soft: rgba(47, 191, 125, 0.14);
+  --domus-accent: #e3a53c;         /* ámbar: pendientes/prioridad */
+  --domus-accent-soft: rgba(227, 165, 60, 0.14);
+  --domus-danger: #e5484d;
+  --domus-danger-soft: rgba(229, 72, 77, 0.14);
 
-  --domus-radius: 1rem;
-  --domus-radius-sm: 0.7rem;
-}
+  --domus-radius: 10px;
+  --domus-radius-sm: 8px;
 
-/* Sombra "elevada" (el elemento sale del fondo) y su variante "hundida"
-   (inputs, estados presionados/activos) — reutilizadas en todo el archivo. */
-.domus-raised {
-  box-shadow: 7px 7px 14px var(--domus-shadow-dark), -6px -6px 13px var(--domus-shadow-light);
-}
-.domus-inset {
-  box-shadow: inset 4px 4px 8px var(--domus-shadow-dark), inset -4px -4px 8px var(--domus-shadow-light);
+  --domus-font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --domus-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 /* Alinea las variables de Bootstrap con la paleta de Domus */
 [data-bs-theme='dark'] {
   --bs-body-bg: var(--domus-bg);
   --bs-body-color: var(--domus-text);
-  --bs-border-color: transparent;
-  --bs-card-bg: var(--domus-bg);
-  --bs-card-border-color: transparent;
-  --bs-tertiary-bg: var(--domus-bg);
-  --bs-secondary-bg: var(--domus-bg);
+  --bs-border-color: var(--domus-border);
+  --bs-card-bg: var(--domus-surface);
+  --bs-card-border-color: var(--domus-border);
+  --bs-tertiary-bg: var(--domus-surface-2);
+  --bs-secondary-bg: var(--domus-surface-2);
   --bs-emphasis-color: #ffffff;
-  --bs-modal-bg: var(--domus-bg);
-  --bs-offcanvas-bg: var(--domus-bg);
+  --bs-modal-bg: var(--domus-surface);
+  --bs-offcanvas-bg: var(--domus-surface);
 }
 
 body {
   background-color: var(--domus-bg);
   color: var(--domus-text);
+  font-family: var(--domus-font-sans);
   min-height: 100vh;
 }
 
 a {
-  color: var(--domus-primary-text);
+  color: var(--domus-primary);
 }
 
-/* --- Formularios: look "hundido" (grabado en el fondo) --------------------- */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.01em;
+}
+
+/* Cifras: montos, fechas, referencias, cantidades — todo lo que sea un dato
+   numérico usa mono, para diferenciarlo tipográficamente del texto corrido. */
+.domus-num {
+  font-family: var(--domus-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Formularios ------------------------------------------------------------ */
 
 .form-control,
 .form-select,
 textarea.form-control {
-  background-color: var(--domus-bg);
-  border: none;
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   border-radius: var(--domus-radius-sm);
   color: var(--domus-text);
-  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
 }
 .form-control:focus,
 .form-select:focus {
-  background-color: var(--domus-bg);
+  background-color: var(--domus-surface);
   color: var(--domus-text);
-  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light),
-    0 0 0 0.2rem var(--domus-primary-soft);
+  border-color: var(--domus-primary);
+  box-shadow: 0 0 0 3px var(--domus-primary-soft);
 }
 .form-control[type='file'] {
-  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
   padding: 0.5rem 0.75rem;
 }
-
-/* --bs-border-color se deja transparente para las tarjetas/inputs
-   neumórficos (ver más abajo), pero un checkbox SÍ necesita borde propio
-   para no volverse invisible sobre el mismo fondo. */
 .form-check-input {
-  background-color: var(--domus-bg);
-  border: 1px solid var(--domus-text-muted);
-  box-shadow: 2px 2px 5px var(--domus-shadow-dark), -2px -2px 5px var(--domus-shadow-light);
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border-strong);
 }
 .form-check-input:checked {
   background-color: var(--domus-primary);
@@ -95,60 +97,103 @@ textarea.form-control {
 }
 .form-check-input:focus {
   border-color: var(--domus-primary);
-  box-shadow: 2px 2px 5px var(--domus-shadow-dark), -2px -2px 5px var(--domus-shadow-light),
-    0 0 0 0.2rem var(--domus-primary-soft);
+  box-shadow: 0 0 0 3px var(--domus-primary-soft);
 }
 .form-control::placeholder {
   color: var(--domus-text-muted);
 }
 .form-control:disabled {
-  background-color: var(--domus-bg);
+  background-color: var(--domus-surface);
   opacity: 0.6;
 }
 
 /* --- Botones ---------------------------------------------------------------- */
 
+.btn {
+  border-radius: var(--domus-radius-sm);
+  font-weight: 500;
+}
+
 .btn-domus-primary {
   background-color: var(--domus-primary);
-  border: none;
-  color: #fff;
-  border-radius: var(--domus-radius-sm);
-  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -3px -3px 8px rgba(255, 255, 255, 0.03);
-  transition: box-shadow 0.12s ease, transform 0.12s ease, background-color 0.12s ease;
+  border: 1px solid var(--domus-primary);
+  color: #06170f;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 .btn-domus-primary:hover,
 .btn-domus-primary:focus {
   background-color: var(--domus-primary-hover);
-  color: #fff;
-  transform: translateY(-1px);
+  border-color: var(--domus-primary-hover);
+  color: #06170f;
 }
 .btn-domus-primary:active {
-  transform: translateY(0);
-  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.05);
+  background-color: var(--domus-primary-hover);
 }
 
 .btn-outline-secondary,
 .btn-outline-danger {
-  background-color: var(--domus-bg);
-  border: none;
-  border-radius: var(--domus-radius-sm);
-  box-shadow: 4px 4px 9px var(--domus-shadow-dark), -3px -3px 8px var(--domus-shadow-light);
-  transition: box-shadow 0.12s ease, transform 0.12s ease;
+  background-color: transparent;
+  border: 1px solid var(--domus-border-strong);
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 .btn-outline-secondary {
   color: var(--domus-text);
 }
 .btn-outline-danger {
-  color: #e5534b;
+  color: #f0787c;
+  border-color: rgba(229, 72, 77, 0.4);
 }
 .btn-outline-secondary:hover,
-.btn-outline-danger:hover {
-  transform: translateY(-1px);
+.btn-outline-secondary:focus {
+  background-color: var(--domus-surface-2);
+  color: var(--domus-text);
+  border-color: var(--domus-border-strong);
 }
-.btn-outline-secondary:active,
-.btn-outline-danger:active {
-  transform: translateY(0);
-  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  background-color: var(--domus-danger-soft);
+  color: #f0787c;
+  border-color: var(--domus-danger);
+}
+
+/* --- Insignias de estado (badges) ------------------------------------------- */
+/* Pastillas pequeñas en mayúsculas, borde fino, fondo tenue — como las
+   etiquetas "FREE"/"PRODUCTION" de un panel técnico, no un chip inflado. */
+
+.badge {
+  font-family: var(--domus-font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.32em 0.6em;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.badge.text-bg-light {
+  background-color: var(--domus-surface-2) !important;
+  color: var(--domus-text-muted) !important;
+  border-color: var(--domus-border);
+}
+.badge.text-bg-success {
+  background-color: var(--domus-primary-soft) !important;
+  color: var(--domus-primary) !important;
+  border-color: rgba(47, 191, 125, 0.35);
+}
+.badge.text-bg-warning {
+  background-color: var(--domus-accent-soft) !important;
+  color: var(--domus-accent) !important;
+  border-color: rgba(227, 165, 60, 0.35);
+}
+.badge.text-bg-danger {
+  background-color: var(--domus-danger-soft) !important;
+  color: #f0787c !important;
+  border-color: rgba(229, 72, 77, 0.35);
+}
+.badge.text-bg-secondary {
+  background-color: var(--domus-surface-2) !important;
+  color: var(--domus-text-muted) !important;
+  border-color: var(--domus-border);
 }
 
 /* --- Páginas de autenticación (login, registro, recuperar) ---------------- */
@@ -164,30 +209,30 @@ textarea.form-control {
 .domus-auth-card {
   width: 100%;
   max-width: 420px;
-  background-color: var(--domus-bg);
-  border: none;
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   border-radius: var(--domus-radius);
-  box-shadow: 10px 10px 22px var(--domus-shadow-dark), -8px -8px 20px var(--domus-shadow-light);
 }
 
 .domus-logo {
-  font-weight: 700;
-  color: var(--domus-primary-text);
+  font-weight: 600;
+  color: var(--domus-text);
   letter-spacing: -0.02em;
 }
 
 .domus-auth-logo {
   display: block;
   margin: 0 auto 0.75rem;
-  height: 96px;
-  width: 96px;
+  height: 80px;
+  width: 80px;
   object-fit: contain;
   border-radius: 50%;
+  border: 1px solid var(--domus-border);
 }
 
 .domus-sidebar-brand-logo {
-  height: 32px;
-  width: 32px;
+  height: 28px;
+  width: 28px;
   object-fit: contain;
   border-radius: 50%;
   flex-shrink: 0;
@@ -232,15 +277,15 @@ textarea.form-control {
 }
 
 .domus-sidebar {
-  width: 260px;
+  width: 240px;
   flex-shrink: 0;
-  background-color: var(--domus-bg);
+  background-color: var(--domus-surface);
+  border-right: 1px solid var(--domus-border);
   padding: 1.25rem 1rem;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  box-shadow: 5px 0 16px var(--domus-shadow-dark);
   z-index: 5;
 }
 
@@ -248,8 +293,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.15rem;
+  font-weight: 600;
+  font-size: 1.05rem;
   color: var(--domus-text) !important;
   text-decoration: none;
   margin-bottom: 1.5rem;
@@ -258,44 +303,51 @@ textarea.form-control {
 .domus-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.15rem;
 }
 
 .domus-sidebar-link {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.85rem;
+  gap: 0.65rem;
+  padding: 0.5rem 0.7rem;
   border-radius: var(--domus-radius-sm);
+  border-left: 2px solid transparent;
   color: var(--domus-text-muted);
   text-decoration: none;
-  font-size: 0.925rem;
-  transition: box-shadow 0.12s ease, color 0.12s ease;
+  font-size: 0.9rem;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.domus-sidebar-link i {
+  font-size: 0.95rem;
+  width: 1.1rem;
+  text-align: center;
+  flex-shrink: 0;
 }
 .domus-sidebar-link:hover {
-  box-shadow: 3px 3px 7px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
+  background-color: var(--domus-surface-2);
   color: var(--domus-text);
 }
 .domus-sidebar-link.active {
-  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
-  color: var(--domus-primary-text);
-  font-weight: 600;
+  background-color: var(--domus-primary-soft);
+  color: var(--domus-primary);
+  border-left-color: var(--domus-primary);
+  font-weight: 500;
 }
 
 .domus-topbar-mobile {
-  background-color: var(--domus-bg);
+  background-color: var(--domus-surface);
+  border-bottom: 1px solid var(--domus-border);
   padding: 0.65rem 1rem;
   position: sticky;
   top: 0;
   z-index: 1020;
-  box-shadow: 0 5px 14px var(--domus-shadow-dark);
 }
 
 .domus-sidebar-offcanvas {
-  background-color: var(--domus-bg);
-  border: none;
+  background-color: var(--domus-surface);
+  border-right: 1px solid var(--domus-border);
   width: 260px;
-  box-shadow: 10px 0 24px var(--domus-shadow-dark);
 }
 
 .domus-main {
@@ -316,44 +368,77 @@ textarea.form-control {
 .modal-content,
 .domus-hogar-card,
 .domus-modulo-pendiente {
-  background-color: var(--domus-bg);
-  border: none;
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   border-radius: var(--domus-radius);
-  box-shadow: 7px 7px 14px var(--domus-shadow-dark), -6px -6px 13px var(--domus-shadow-light);
+}
+
+.domus-stat-card .h3,
+.domus-stat-card .h4,
+.domus-stat-card .h5,
+.domus-stat-card .h6 {
+  font-family: var(--domus-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 575.98px) {
+  .domus-stat-card .h3,
+  .domus-stat-card .h4 {
+    font-size: 1.2rem;
+  }
 }
 
 .domus-hogar-card {
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .domus-hogar-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 10px 10px 20px var(--domus-shadow-dark), -8px -8px 18px var(--domus-shadow-light);
+  border-color: var(--domus-border-strong);
+  background-color: var(--domus-surface-2);
 }
 
 .domus-modulo-pendiente {
   color: var(--domus-text-muted);
-  opacity: 0.75;
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.domus-modulo-icono {
+  font-size: 1.3rem;
+  color: var(--domus-primary);
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--domus-primary-soft);
+  border-radius: var(--domus-radius-sm);
+}
+.domus-modulo-pendiente .domus-modulo-icono {
+  color: var(--domus-text-muted);
+  background-color: var(--domus-surface-2);
 }
 
 .list-group-item {
-  background-color: var(--domus-bg);
-  border: none;
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   color: var(--domus-text);
   border-radius: var(--domus-radius-sm) !important;
-  margin-bottom: 0.6rem;
-  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -4px -4px 10px var(--domus-shadow-light);
+  margin-bottom: 0.5rem;
+  transition: border-color 0.12s ease;
 }
 .list-group-item:last-child {
   margin-bottom: 0;
 }
+.list-group-item:hover {
+  border-color: var(--domus-border-strong);
+}
 
-/* Barra de progreso (resumen de presupuesto en gastos.html): riel hundido,
-   relleno con color plano de Bootstrap (bg-success/warning/danger). */
+/* Barra de progreso (resumen de presupuesto en gastos.html) */
 .progress {
-  background-color: var(--domus-bg);
+  background-color: var(--domus-surface-2);
+  border: 1px solid var(--domus-border);
   border-radius: 999px;
-  box-shadow: inset 2px 2px 5px var(--domus-shadow-dark), inset -2px -2px 5px var(--domus-shadow-light);
 }
 .progress-bar {
   border-radius: 999px;
@@ -363,7 +448,7 @@ textarea.form-control {
   filter: invert(1) grayscale(100%);
 }
 
-/* --- Calendario de servicios (servicios.html) ------------------------------ */
+/* --- Calendario de servicios/gastos ----------------------------------------- */
 
 .domus-calendario-grid {
   display: grid;
@@ -381,29 +466,35 @@ textarea.form-control {
 .domus-calendario-dia {
   aspect-ratio: 1;
   border-radius: var(--domus-radius-sm);
-  background-color: var(--domus-bg);
-  box-shadow: 4px 4px 8px var(--domus-shadow-dark), -3px -3px 7px var(--domus-shadow-light);
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 0.85rem;
+  font-family: var(--domus-font-mono);
   color: var(--domus-text);
-  transition: box-shadow 0.12s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.domus-calendario-dia:hover {
+  border-color: var(--domus-border-strong);
 }
 .domus-calendario-dia.domus-dia-vacio {
   visibility: hidden;
-  box-shadow: none;
+  border: none;
   cursor: default;
 }
 .domus-calendario-dia.domus-dia-hoy {
-  color: var(--domus-primary-text);
-  font-weight: 700;
+  color: var(--domus-primary);
+  font-weight: 600;
+  border-color: var(--domus-primary);
 }
 .domus-calendario-dia.domus-dia-seleccionado {
-  box-shadow: inset 3px 3px 6px var(--domus-shadow-dark), inset -3px -3px 6px var(--domus-shadow-light);
-  color: var(--domus-primary-text);
+  background-color: var(--domus-primary-soft);
+  color: var(--domus-primary);
+  border-color: var(--domus-primary);
 }
 
 .domus-calendario-dots {
@@ -419,7 +510,7 @@ textarea.form-control {
   border-radius: 50%;
 }
 .domus-calendario-dot.pagado {
-  background-color: var(--domus-primary-text);
+  background-color: var(--domus-primary);
 }
 
 /* Pendientes/vencidos se marcan con un rayito (más llamativo que un punto,
@@ -435,10 +526,10 @@ textarea.form-control {
   background-color: var(--domus-accent);
 }
 .domus-calendario-dot.vencido {
-  background-color: #e5534b;
+  background-color: var(--domus-danger);
 }
 
-/* --- Avatar de perfil (perfil.html) ----------------------------------------- */
+/* --- Avatar de perfil -------------------------------------------------------- */
 
 .domus-avatar-wrap {
   position: relative;
@@ -452,25 +543,24 @@ textarea.form-control {
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 4px 4px 10px var(--domus-shadow-dark), -3px -3px 8px var(--domus-shadow-light);
-  background-color: var(--domus-bg);
+  border: 1px solid var(--domus-border);
+  background-color: var(--domus-surface);
 }
 
 .domus-avatar-editar {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid var(--domus-bg);
   background-color: var(--domus-primary);
-  color: #fff;
-  font-size: 0.85rem;
+  color: #06170f;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 3px 3px 7px var(--domus-shadow-dark);
   cursor: pointer;
 }
 .domus-avatar-editar:hover {
@@ -483,12 +573,12 @@ textarea.form-control {
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  background-color: var(--domus-bg);
-  box-shadow: 2px 2px 6px var(--domus-shadow-dark), -2px -2px 5px var(--domus-shadow-light);
+  background-color: var(--domus-surface);
+  border: 1px solid var(--domus-border);
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 .domus-avatar-mini:hover {
-  transform: scale(1.08);
+  border-color: var(--domus-primary);
 }

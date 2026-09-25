@@ -9,6 +9,8 @@
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
   <link rel="icon" href="../icons/icon-192.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="../css/styles.css" rel="stylesheet" />
   <script type="module" src="../js/register-sw.js"></script>
 </head>
@@ -17,13 +19,13 @@
     <aside class="domus-sidebar d-none d-md-flex flex-column">
       <a href="../dashboard/" class="domus-sidebar-brand"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</a>
       <nav class="domus-sidebar-nav flex-grow-1">
-        <a href="../dashboard/" class="domus-sidebar-link">🏠 Inicio</a>
-        <a href="../mercado/" class="domus-sidebar-link">🛒 Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link active">💰 Gastos</a>
-        <a href="../servicios/" class="domus-sidebar-link">🧾 Servicios</a>
-        <a href="../miembros/" class="domus-sidebar-link">👥 Miembros</a>
-        <a href="../hogares/" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
-        <a href="../perfil/" class="domus-sidebar-link">⚙️ Mi perfil</a>
+        <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+        <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+        <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+        <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+        <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+        <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
       </nav>
       <button id="btn-salir" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
       <div class="domus-sidebar-credit">Sebas Dev © 2026</div>
@@ -31,14 +33,14 @@
 
     <div class="domus-content-col">
       <div class="domus-topbar-mobile d-flex d-md-none align-items-center justify-content-between">
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">☰</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"><i class="bi bi-list"></i></button>
         <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
         <span style="width: 38px"></span>
       </div>
 
       <main class="domus-main flex-grow-1" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <h2 class="mb-0">💰 Gastos de <span id="nombre-hogar">este hogar</span></h2>
+      <h2 class="mb-0"><i class="bi bi-wallet2"></i> Gastos de <span id="nombre-hogar">este hogar</span></h2>
       <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-gasto">
         + Agregar gasto
       </button>
@@ -88,13 +90,13 @@
         <button class="nav-link active" data-vista="lista" type="button">Gastos</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-vista="recurrentes" type="button">🔁 Recurrentes</button>
+        <button class="nav-link" data-vista="recurrentes" type="button"><i class="bi bi-arrow-repeat"></i> Recurrentes</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-vista="calendario" type="button">📅 Calendario</button>
+        <button class="nav-link" data-vista="calendario" type="button"><i class="bi bi-calendar3"></i> Calendario</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-vista="categorias" type="button">🥧 Por categoría</button>
+        <button class="nav-link" data-vista="categorias" type="button"><i class="bi bi-pie-chart"></i> Por categoría</button>
       </li>
     </ul>
 
@@ -113,8 +115,8 @@
         </div>
         <div class="btn-group btn-group-sm" role="group" aria-label="Filtrar por tipo" id="filtro-tipo">
           <button type="button" class="btn btn-outline-secondary active" data-tipo="todos">Todos</button>
-          <button type="button" class="btn btn-outline-secondary" data-tipo="personal">👤 Personal</button>
-          <button type="button" class="btn btn-outline-secondary" data-tipo="hogar">🏠 Del hogar</button>
+          <button type="button" class="btn btn-outline-secondary" data-tipo="personal"><i class="bi bi-person"></i> Personal</button>
+          <button type="button" class="btn btn-outline-secondary" data-tipo="hogar"><i class="bi bi-house"></i> Del hogar</button>
         </div>
       </div>
 
@@ -128,12 +130,12 @@
         <strong>¿Cómo funcionan los recurrentes?</strong> Un "recurrente" es una plantilla para algo que
         pagas cada mes (una cuota, el gimnasio, etc.): la creas <em>una sola vez</em> con su monto y el
         día en que vence. No genera nada por sí sola — cada mes, entra aquí y presiona
-        <strong>"🔄 Generar pendientes del mes"</strong> para crear el gasto pendiente de ese mes a partir
+        <strong>"<i class="bi bi-arrow-clockwise"></i> Generar pendientes del mes"</strong> para crear el gasto pendiente de ese mes a partir
         de tus plantillas activas. Ese pendiente aparece en la pestaña "Gastos" y en el Calendario hasta
         que lo marques como pagado.
       </div>
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <button id="btn-generar-pendientes" class="btn btn-domus-primary" type="button">🔄 Generar pendientes del mes</button>
+        <button id="btn-generar-pendientes" class="btn btn-domus-primary" type="button"><i class="bi bi-arrow-clockwise"></i> Generar pendientes del mes</button>
         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-recurrente">
           + Nuevo recurrente
         </button>
@@ -184,13 +186,13 @@
       </div>
       <div class="offcanvas-body d-flex flex-column">
         <nav class="domus-sidebar-nav flex-grow-1">
-          <a href="../dashboard/" class="domus-sidebar-link">🏠 Inicio</a>
-          <a href="../mercado/" class="domus-sidebar-link">🛒 Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link active">💰 Gastos</a>
-          <a href="../servicios/" class="domus-sidebar-link">🧾 Servicios</a>
-          <a href="../miembros/" class="domus-sidebar-link">👥 Miembros</a>
-          <a href="../hogares/" class="domus-sidebar-link">🔁 Cambiar de hogar</a>
-          <a href="../perfil/" class="domus-sidebar-link">⚙️ Mi perfil</a>
+          <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+          <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+          <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+          <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+          <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+          <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
         </nav>
         <button id="btn-salir-movil" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
         <div class="domus-sidebar-credit">Sebas Dev © 2026</div>
@@ -565,9 +567,9 @@
 
       limpiarMensaje('mensaje');
       if (nivelAlerta === 'excedido') {
-        mostrarMensaje('mensaje', '⚠️ Superaste el presupuesto mensual de este hogar (gastos + mercado + servicios).', 'danger');
+        mostrarMensaje('mensaje', '<i class="bi bi-exclamation-triangle"></i> Superaste el presupuesto mensual de este hogar (gastos + mercado + servicios).', 'danger');
       } else if (nivelAlerta === 'cerca') {
-        mostrarMensaje('mensaje', '⚠️ Vas cerca del límite del presupuesto mensual (80% o más).', 'warning');
+        mostrarMensaje('mensaje', '<i class="bi bi-exclamation-triangle"></i> Vas cerca del límite del presupuesto mensual (80% o más).', 'warning');
       }
     }
 
@@ -688,8 +690,8 @@
       const vencido = g.estado === 'pendiente' && new Date(g.fecha + 'T00:00:00') < hoy;
 
       const tipoBadge = g.es_personal
-        ? '<span class="badge text-bg-light border ms-1">👤 Personal</span>'
-        : '<span class="badge text-bg-light border ms-1">🏠 Del hogar</span>';
+        ? '<span class="badge text-bg-light border ms-1"><i class="bi bi-person"></i> Personal</span>'
+        : '<span class="badge text-bg-light border ms-1"><i class="bi bi-house"></i> Del hogar</span>';
       const estadoBadge =
         g.estado === 'pendiente'
           ? `<span class="badge ${vencido ? 'text-bg-danger' : 'text-bg-warning'} ms-1">${vencido ? 'Vencido' : 'Pendiente'}</span>`
@@ -707,16 +709,16 @@
         : '';
 
       const pagarLinkBtn = g.enlace_pago
-        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer">💳 Ir a pagar</a>`
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Ir a pagar</a>`
         : '';
 
       const comprobanteBtn = g.comprobante_path
-        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}">📄 Ver comprobante</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}"><i class="bi bi-file-earmark-text"></i> Ver comprobante</button>`
         : g.estado === 'pagado'
-        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}">📎 Adjuntar</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}"><i class="bi bi-paperclip"></i> Adjuntar</button>`
         : '';
 
-      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}">✏️ Editar</button>`;
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}"><i class="bi bi-pencil"></i> Editar</button>`;
 
       const acciones =
         g.estado === 'pendiente'
@@ -743,7 +745,7 @@
             ${g.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(g.observaciones)}</div>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-semibold">${formatearMoneda(g.monto)}</span>
+            <span class="fw-semibold domus-num">${formatearMoneda(g.monto)}</span>
             ${acciones}
           </div>
         </li>`;
@@ -794,8 +796,8 @@
 
     function filaRecurrente(r) {
       const tipoBadge = r.es_personal
-        ? '<span class="badge text-bg-light border ms-1">👤 Personal</span>'
-        : '<span class="badge text-bg-light border ms-1">🏠 Del hogar</span>';
+        ? '<span class="badge text-bg-light border ms-1"><i class="bi bi-person"></i> Personal</span>'
+        : '<span class="badge text-bg-light border ms-1"><i class="bi bi-house"></i> Del hogar</span>';
       const estadoBadge = r.activo
         ? '<span class="badge text-bg-success ms-1">Activo</span>'
         : '<span class="badge text-bg-secondary ms-1">Inactivo</span>';
@@ -803,7 +805,7 @@
         ? `<div class="small text-muted">Referencia: ${escapeHtml(r.numero_referencia)}</div>`
         : '';
       const enlaceInfo = r.enlace_pago
-        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(r.enlace_pago)}" target="_blank" rel="noopener noreferrer">💳 Enlace de pago</a>`
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(r.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Enlace de pago</a>`
         : '';
       const accionActivo = r.activo
         ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}">Desactivar</button>`
@@ -822,7 +824,7 @@
             ${referenciaInfo}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-semibold">${formatearMoneda(r.monto)}</span>
+            <span class="fw-semibold domus-num">${formatearMoneda(r.monto)}</span>
             ${enlaceInfo}
             ${accionActivo}
             <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}">Eliminar</button>
@@ -844,7 +846,7 @@
       } catch (error) {
         mostrarMensaje('mensaje-recurrentes', 'No se pudieron generar los pendientes: ' + error.message);
       } finally {
-        alternarCargando('btn-generar-pendientes', false, '🔄 Generar pendientes del mes');
+        alternarCargando('btn-generar-pendientes', false, '<i class="bi bi-arrow-clockwise"></i> Generar pendientes del mes');
       }
     });
 

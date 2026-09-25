@@ -69,19 +69,26 @@ async function usuarioActualId() {
 }
 
 /**
- * Lista los gastos visibles para el usuario actual en este hogar: los del
- * hogar (de cualquier miembro) más los personales propios — RLS ya filtra
- * los personales de otras personas, no hace falta excluirlos aquí.
+ * Lista los gastos visibles para el usuario actual: los del hogar indicado
+ * (de cualquier miembro) más TODOS sus gastos personales propios, sin
+ * importar en qué hogar los haya registrado — un gasto personal es del
+ * usuario, no del hogar, así que no debe desaparecer al cambiar de hogar
+ * activo. hogar_id en un gasto personal solo queda como dato de dónde se
+ * creó, nunca se usa para filtrar su visibilidad.
  */
 export async function listarGastos(hogarId) {
-  const { data, error } = await supabase
-    .from('gastos')
-    .select(SELECT_GASTO)
-    .eq('hogar_id', hogarId)
-    .order('fecha', { ascending: false })
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data;
+  const usuarioId = await usuarioActualId();
+  const [delHogar, personales] = await Promise.all([
+    supabase.from('gastos').select(SELECT_GASTO).eq('hogar_id', hogarId).eq('es_personal', false),
+    supabase.from('gastos').select(SELECT_GASTO).eq('es_personal', true).eq('registrado_por', usuarioId),
+  ]);
+  if (delHogar.error) throw delHogar.error;
+  if (personales.error) throw personales.error;
+
+  return [...delHogar.data, ...personales.data].sort((a, b) => {
+    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 }
 
 /** Gasto "del momento": ya pagado desde el instante en que se registra. */
@@ -155,14 +162,17 @@ export async function obtenerUrlComprobanteGasto(path) {
 
 // --- Gastos recurrentes (plantillas) ----------------------------------------
 
+/** Mismo criterio que listarGastos: las plantillas personales no dependen del hogar activo. */
 export async function listarRecurrentes(hogarId) {
-  const { data, error } = await supabase
-    .from('gastos_recurrentes')
-    .select('*')
-    .eq('hogar_id', hogarId)
-    .order('dia_mes', { ascending: true });
-  if (error) throw error;
-  return data;
+  const usuarioId = await usuarioActualId();
+  const [delHogar, personales] = await Promise.all([
+    supabase.from('gastos_recurrentes').select('*').eq('hogar_id', hogarId).eq('es_personal', false),
+    supabase.from('gastos_recurrentes').select('*').eq('es_personal', true).eq('creado_por', usuarioId),
+  ]);
+  if (delHogar.error) throw delHogar.error;
+  if (personales.error) throw personales.error;
+
+  return [...delHogar.data, ...personales.data].sort((a, b) => a.dia_mes - b.dia_mes);
 }
 
 export async function agregarRecurrente(hogarId, campos) {
@@ -188,7 +198,7 @@ export async function agregarRecurrente(hogarId, campos) {
   return data;
 }
 
-export async function actualizarRecurrente(recurrenteId, cambios) {
+async function actualizarRecurrente(recurrenteId, cambios) {
   const { error } = await supabase.from('gastos_recurrentes').update(cambios).eq('id', recurrenteId);
   if (error) throw error;
 }
