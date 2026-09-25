@@ -268,8 +268,11 @@ export async function generarPendientesDelMes(hogarId) {
  */
 export function calcularResumenMes(gastos, presupuestoMensual) {
   const ahora = new Date();
+  // El presupuesto es del HOGAR: los gastos personales no cuentan aquí (son
+  // de quien los hizo, no salen de la plata compartida). Sí siguen viéndose
+  // en la lista normal de Gastos, solo no entran en este resumen.
   const delMes = gastos.filter((g) => {
-    if (g.estado !== 'pagado' || !g.fecha_pago) return false;
+    if (g.estado !== 'pagado' || !g.fecha_pago || g.es_personal) return false;
     const fecha = new Date(g.fecha_pago + 'T00:00:00');
     return fecha.getFullYear() === ahora.getFullYear() && fecha.getMonth() === ahora.getMonth();
   });
@@ -289,7 +292,7 @@ export function calcularResumenMes(gastos, presupuestoMensual) {
     porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + Number(g.monto);
   }
 
-  const pendientes = gastos.filter((g) => g.estado === 'pendiente');
+  const pendientes = gastos.filter((g) => g.estado === 'pendiente' && !g.es_personal);
 
   return {
     totalGastado,

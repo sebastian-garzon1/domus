@@ -139,6 +139,7 @@ export function calcularResumenServicios(servicios) {
     totalPendiente: pendientes.reduce((suma, s) => suma + Number(s.monto), 0),
     proximoPago: proximoPago ?? null,
     countPagadosMes: pagadosMes.length,
+    totalPagadoMes: pagadosMes.reduce((suma, s) => suma + Number(s.monto), 0),
   };
 }
 

@@ -253,6 +253,57 @@
     </div>
   </div>
 
+  <!-- Modal: editar servicio -->
+  <div class="modal fade" id="modal-editar-servicio" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-editar-servicio">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar servicio</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-editar-servicio"></div>
+            <div class="mb-3">
+              <label for="editar-servicio-nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="editar-servicio-nombre" required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-servicio-monto" class="form-label">Monto</label>
+                <input type="text" inputmode="numeric" class="form-control" id="editar-servicio-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="editar-servicio-vencimiento" class="form-label">Fecha de vencimiento</label>
+                <input type="date" class="form-control" id="editar-servicio-vencimiento" required />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editar-servicio-categoria" class="form-label">Categoría</label>
+              <select id="editar-servicio-categoria" class="form-select"></select>
+            </div>
+            <div class="mb-3">
+              <label for="editar-servicio-referencia" class="form-label">Número de referencia (opcional)</label>
+              <input type="text" class="form-control" id="editar-servicio-referencia" />
+            </div>
+            <div class="mb-3">
+              <label for="editar-servicio-enlace-pago" class="form-label">Enlace de pago (opcional)</label>
+              <input type="url" class="form-control" id="editar-servicio-enlace-pago" placeholder="https://..." />
+            </div>
+            <div class="mb-3">
+              <label for="editar-servicio-observaciones" class="form-label">Observaciones (opcional)</label>
+              <textarea id="editar-servicio-observaciones" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar-servicio" class="btn btn-domus-primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: nuevo servicio recurrente (plantilla) -->
   <div class="modal fade" id="modal-nuevo-recurrente" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -307,6 +358,7 @@
     import {
       listarServicios,
       agregarServicio,
+      actualizarServicio,
       marcarPagado,
       reabrirServicio,
       eliminarServicio,
@@ -338,6 +390,7 @@
     let vistaActual = 'pendiente';
     let servicioIdParaPagar = null;
     let servicioIdParaAdjuntar = null;
+    let servicioIdParaEditar = null;
     let mesCalendario = new Date();
     mesCalendario.setDate(1);
     let diaSeleccionado = null;
@@ -353,6 +406,7 @@
 
     activarFormatoMiles(document.getElementById('servicio-monto'));
     activarFormatoMiles(document.getElementById('recurrente-monto'));
+    activarFormatoMiles(document.getElementById('editar-servicio-monto'));
 
     llenarSelects();
 
@@ -371,6 +425,7 @@
       const opciones = CATEGORIAS.map((c) => `<option value="${c.valor}">${c.etiqueta}</option>`).join('');
       document.getElementById('servicio-categoria').innerHTML = opciones;
       document.getElementById('recurrente-categoria').innerHTML = opciones;
+      document.getElementById('editar-servicio-categoria').innerHTML = opciones;
     }
 
     async function cargarServicios() {
@@ -447,10 +502,14 @@
 
       lista.innerHTML = visibles.map((s) => filaServicio(s, hoy)).join('');
 
-      lista.querySelectorAll('[data-pagar]').forEach((boton) => {
+      conectarAccionesServicio(lista);
+    }
+
+    function conectarAccionesServicio(contenedor) {
+      contenedor.querySelectorAll('[data-pagar]').forEach((boton) => {
         boton.addEventListener('click', () => abrirModalPagar(boton.dataset.pagar, boton.dataset.nombre));
       });
-      lista.querySelectorAll('[data-reabrir]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-reabrir]').forEach((boton) => {
         boton.addEventListener('click', async () => {
           try {
             await reabrirServicio(boton.dataset.reabrir);
@@ -460,7 +519,7 @@
           }
         });
       });
-      lista.querySelectorAll('[data-eliminar]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-eliminar]').forEach((boton) => {
         boton.addEventListener('click', async () => {
           if (!confirm('¿Eliminar este servicio?')) return;
           try {
@@ -471,7 +530,7 @@
           }
         });
       });
-      lista.querySelectorAll('[data-adjuntar]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-adjuntar]').forEach((boton) => {
         boton.addEventListener('click', () => {
           servicioIdParaAdjuntar = boton.dataset.adjuntar;
           document.getElementById('form-adjuntar-comprobante').reset();
@@ -479,7 +538,7 @@
           new bootstrap.Modal(document.getElementById('modal-adjuntar-comprobante')).show();
         });
       });
-      lista.querySelectorAll('[data-ver-comprobante]').forEach((boton) => {
+      contenedor.querySelectorAll('[data-ver-comprobante]').forEach((boton) => {
         boton.addEventListener('click', async () => {
           try {
             const url = await obtenerUrlComprobante(boton.dataset.verComprobante);
@@ -489,6 +548,24 @@
           }
         });
       });
+      contenedor.querySelectorAll('[data-editar]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalEditarServicio(boton.dataset.editar));
+      });
+    }
+
+    function abrirModalEditarServicio(servicioId) {
+      const s = servicios.find((x) => x.id === servicioId);
+      if (!s) return;
+      servicioIdParaEditar = servicioId;
+      limpiarMensaje('mensaje-modal-editar-servicio');
+      document.getElementById('editar-servicio-nombre').value = s.nombre;
+      document.getElementById('editar-servicio-monto').value = Number(s.monto).toLocaleString('es-CO');
+      document.getElementById('editar-servicio-vencimiento').value = s.fecha_vencimiento;
+      document.getElementById('editar-servicio-categoria').value = s.categoria;
+      document.getElementById('editar-servicio-referencia').value = s.numero_referencia || '';
+      document.getElementById('editar-servicio-enlace-pago').value = s.enlace_pago || '';
+      document.getElementById('editar-servicio-observaciones').value = s.observaciones || '';
+      new bootstrap.Modal(document.getElementById('modal-editar-servicio')).show();
     }
 
     function filaServicio(s, hoy) {
@@ -515,13 +592,16 @@
         ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar="${s.id}">📎 Adjuntar</button>`
         : '';
 
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar="${s.id}">✏️ Editar</button>`;
       const acciones =
         s.estado === 'pendiente'
           ? `${pagarLinkBtn}
              <button class="btn btn-sm btn-domus-primary" data-pagar="${s.id}" data-nombre="${escapeHtml(s.nombre)}">Marcar pagado</button>
+             ${editarBtn}
              <button class="btn btn-sm btn-outline-danger" data-eliminar="${s.id}">Eliminar</button>`
           : `${comprobanteBtn}
              <button class="btn btn-sm btn-outline-secondary" data-reabrir="${s.id}">Reabrir</button>
+             ${editarBtn}
              <button class="btn btn-sm btn-outline-danger" data-eliminar="${s.id}">Eliminar</button>`;
 
       return `
@@ -653,21 +733,7 @@
         <h6 class="mb-2">Servicios del ${fechaLegible}</h6>
         <ul class="list-group">${serviciosDia.map((s) => filaServicio(s, new Date())).join('')}</ul>`;
 
-      contenedor.querySelectorAll('[data-pagar]').forEach((boton) => {
-        boton.addEventListener('click', () => abrirModalPagar(boton.dataset.pagar, boton.dataset.nombre));
-      });
-      contenedor.querySelectorAll('[data-eliminar]').forEach((boton) => {
-        boton.addEventListener('click', async () => {
-          if (!confirm('¿Eliminar este servicio?')) return;
-          try {
-            await eliminarServicio(boton.dataset.eliminar);
-            await cargarServicios();
-            renderCalendario();
-          } catch (error) {
-            mostrarMensaje('mensaje', 'No se pudo eliminar: ' + error.message);
-          }
-        });
-      });
+      conectarAccionesServicio(contenedor);
     }
 
     // --- Servicios recurrentes (plantillas) -----------------------------------
@@ -831,6 +897,43 @@
         mostrarMensaje('mensaje-modal-servicio', 'No se pudo agregar el servicio: ' + error.message);
       } finally {
         alternarCargando('btn-agregar-servicio', false, 'Agregar');
+      }
+    });
+
+    document.getElementById('form-editar-servicio').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-editar-servicio');
+
+      const nombre = document.getElementById('editar-servicio-nombre').value.trim();
+      const monto = obtenerValorNumerico(document.getElementById('editar-servicio-monto'));
+      const fechaVencimiento = document.getElementById('editar-servicio-vencimiento').value;
+      const categoria = document.getElementById('editar-servicio-categoria').value;
+      const numeroReferencia = document.getElementById('editar-servicio-referencia').value.trim();
+      const enlacePago = document.getElementById('editar-servicio-enlace-pago').value.trim();
+      const observaciones = document.getElementById('editar-servicio-observaciones').value.trim();
+
+      if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
+        mostrarMensaje('mensaje-modal-editar-servicio', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
+
+      alternarCargando('btn-guardar-editar-servicio', true);
+      try {
+        await actualizarServicio(servicioIdParaEditar, {
+          nombre,
+          monto,
+          fecha_vencimiento: fechaVencimiento,
+          categoria,
+          numero_referencia: numeroReferencia || null,
+          enlace_pago: enlacePago || null,
+          observaciones: observaciones || null,
+        });
+        bootstrap.Modal.getInstance(document.getElementById('modal-editar-servicio'))?.hide();
+        await cargarServicios();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-editar-servicio', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-editar-servicio', false, 'Guardar cambios');
       }
     });
 

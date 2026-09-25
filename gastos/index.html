@@ -446,6 +446,8 @@
       etiquetaCategoria,
       etiquetaMetodoPago,
     } from '../js/gastos.js';
+    import { listarItems, calcularTotales } from '../js/mercado.js';
+    import { listarServicios, calcularResumenServicios } from '../js/servicios.js';
     import {
       mostrarMensaje,
       limpiarMensaje,
@@ -459,6 +461,8 @@
     let hogarActivo = null;
     let gastos = [];
     let recurrentes = [];
+    let totalMercadoMes = 0;
+    let totalServiciosMes = 0;
     let vistaActual = 'lista';
     let gastoIdParaAdjuntar = null;
     let gastoIdParaPagar = null;
@@ -512,6 +516,13 @@
     async function cargarGastos() {
       const lista = document.getElementById('lista-gastos');
       try {
+        const [items, servicios] = await Promise.all([
+          listarItems(hogarActivo.id),
+          listarServicios(hogarActivo.id),
+        ]).catch(() => [[], []]); // Mercado/Servicios son secundarios aquí: si fallan, no bloquean Gastos.
+        totalMercadoMes = calcularTotales(items).totalGastadoMes;
+        totalServiciosMes = calcularResumenServicios(servicios).totalPagadoMes;
+
         [gastos, recurrentes] = await Promise.all([listarGastos(hogarActivo.id), listarRecurrentes(hogarActivo.id)]);
         pintarResumen();
         if (vistaActual === 'lista') pintarLista();
@@ -526,29 +537,36 @@
     function pintarResumen() {
       const r = calcularResumenMes(gastos, hogarActivo.presupuesto_mensual);
 
+      // El presupuesto del hogar es la suma real de los 3 módulos: Gastos
+      // (sin los personales, ya excluidos por calcularResumenMes), lo
+      // comprado en Mercado y lo pagado en Servicios este mes.
+      const totalGastado = r.totalGastado + totalMercadoMes + totalServiciosMes;
+      const porcentaje = r.presupuesto > 0 ? (totalGastado / r.presupuesto) * 100 : 0;
+      const nivelAlerta = r.presupuesto <= 0 ? 'ok' : porcentaje >= 100 ? 'excedido' : porcentaje >= 80 ? 'cerca' : 'ok';
+
       document.getElementById('stat-presupuesto').textContent = formatearMoneda(r.presupuesto);
-      document.getElementById('stat-gastado').textContent = formatearMoneda(r.totalGastado);
-      document.getElementById('stat-disponible').textContent = formatearMoneda(Math.max(r.presupuesto - r.totalGastado, 0));
+      document.getElementById('stat-gastado').textContent = formatearMoneda(totalGastado);
+      document.getElementById('stat-disponible').textContent = formatearMoneda(Math.max(r.presupuesto - totalGastado, 0));
       document.getElementById('stat-pendientes').textContent =
         r.countPendientes > 0 ? `${r.countPendientes} · ${formatearMoneda(r.totalPendiente)}` : '0';
 
       const barra = document.getElementById('barra-presupuesto');
-      barra.style.width = Math.min(r.porcentaje, 100) + '%';
+      barra.style.width = Math.min(porcentaje, 100) + '%';
       barra.className = 'progress-bar ' + (
-        r.nivelAlerta === 'excedido' ? 'bg-danger' : r.nivelAlerta === 'cerca' ? 'bg-warning' : 'bg-success'
+        nivelAlerta === 'excedido' ? 'bg-danger' : nivelAlerta === 'cerca' ? 'bg-warning' : 'bg-success'
       );
 
       const resumenTexto = document.getElementById('resumen-texto');
       if (r.presupuesto <= 0) {
         resumenTexto.textContent = 'Este hogar no tiene presupuesto mensual configurado.';
       } else {
-        resumenTexto.textContent = `${formatearMoneda(r.totalGastado)} de ${formatearMoneda(r.presupuesto)} (${r.porcentaje.toFixed(0)}%)`;
+        resumenTexto.textContent = `${formatearMoneda(totalGastado)} de ${formatearMoneda(r.presupuesto)} (${porcentaje.toFixed(0)}%) — incluye mercado y servicios`;
       }
 
       limpiarMensaje('mensaje');
-      if (r.nivelAlerta === 'excedido') {
-        mostrarMensaje('mensaje', '⚠️ Superaste el presupuesto mensual de este hogar.', 'danger');
-      } else if (r.nivelAlerta === 'cerca') {
+      if (nivelAlerta === 'excedido') {
+        mostrarMensaje('mensaje', '⚠️ Superaste el presupuesto mensual de este hogar (gastos + mercado + servicios).', 'danger');
+      } else if (nivelAlerta === 'cerca') {
         mostrarMensaje('mensaje', '⚠️ Vas cerca del límite del presupuesto mensual (80% o más).', 'warning');
       }
     }

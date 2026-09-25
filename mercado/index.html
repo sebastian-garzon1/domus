@@ -194,6 +194,59 @@
     </div>
   </div>
 
+  <!-- Modal: editar ítem -->
+  <div class="modal fade" id="modal-editar-item" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-editar-item">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar ítem</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-editar-item"></div>
+            <div class="mb-3">
+              <label for="editar-item-nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="editar-item-nombre" required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-item-cantidad" class="form-label">Cantidad</label>
+                <input type="number" min="0.01" step="0.01" class="form-control" id="editar-item-cantidad" />
+              </div>
+              <div class="col-6">
+                <label for="editar-item-unidad" class="form-label">Unidad</label>
+                <select id="editar-item-unidad" class="form-select"></select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-item-categoria" class="form-label">Categoría</label>
+                <select id="editar-item-categoria" class="form-select"></select>
+              </div>
+              <div class="col-6">
+                <label for="editar-item-prioridad" class="form-label">Prioridad</label>
+                <select id="editar-item-prioridad" class="form-select"></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editar-item-precio-estimado" class="form-label">Precio estimado (opcional)</label>
+              <input type="text" inputmode="numeric" class="form-control" id="editar-item-precio-estimado" placeholder="0" />
+            </div>
+            <div class="mb-3">
+              <label for="editar-item-observaciones" class="form-label">Observaciones (opcional)</label>
+              <textarea id="editar-item-observaciones" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar-item" class="btn btn-domus-primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
     import { protegerPagina, cerrarSesion } from '../js/auth.js';
@@ -201,6 +254,7 @@
     import {
       listarItems,
       agregarItem,
+      actualizarItem,
       marcarComprado,
       reabrirItem,
       eliminarItem,
@@ -224,6 +278,7 @@
     let items = [];
     let vistaActual = 'pendiente';
     let itemIdParaComprar = null;
+    let itemIdParaEditar = null;
     let mesLista = new Date();
     mesLista.setDate(1);
 
@@ -236,6 +291,7 @@
 
     activarFormatoMiles(document.getElementById('item-precio-estimado'));
     activarFormatoMiles(document.getElementById('comprar-precio-final'));
+    activarFormatoMiles(document.getElementById('editar-item-precio-estimado'));
 
     llenarSelects();
 
@@ -251,16 +307,19 @@
     }
 
     function llenarSelects() {
-      const selUnidad = document.getElementById('item-unidad');
-      selUnidad.innerHTML = UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join('');
+      const opcionesUnidad = UNIDADES.map((u) => `<option value="${u}">${u}</option>`).join('');
+      document.getElementById('item-unidad').innerHTML = opcionesUnidad;
+      document.getElementById('editar-item-unidad').innerHTML = opcionesUnidad;
 
-      const selCategoria = document.getElementById('item-categoria');
-      selCategoria.innerHTML = CATEGORIAS.map((c) => `<option value="${c.valor}">${c.etiqueta}</option>`).join('');
+      const opcionesCategoria = CATEGORIAS.map((c) => `<option value="${c.valor}">${c.etiqueta}</option>`).join('');
+      document.getElementById('item-categoria').innerHTML = opcionesCategoria;
+      document.getElementById('editar-item-categoria').innerHTML = opcionesCategoria;
 
-      const selPrioridad = document.getElementById('item-prioridad');
-      selPrioridad.innerHTML = PRIORIDADES.map(
+      const opcionesPrioridad = PRIORIDADES.map(
         (p) => `<option value="${p.valor}" ${p.valor === 'media' ? 'selected' : ''}>${p.etiqueta}</option>`
       ).join('');
+      document.getElementById('item-prioridad').innerHTML = opcionesPrioridad;
+      document.getElementById('editar-item-prioridad').innerHTML = PRIORIDADES.map((p) => `<option value="${p.valor}">${p.etiqueta}</option>`).join('');
     }
 
     async function cargarItems() {
@@ -342,6 +401,24 @@
           }
         });
       });
+      lista.querySelectorAll('[data-editar]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalEditar(boton.dataset.editar));
+      });
+    }
+
+    function abrirModalEditar(itemId) {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
+      itemIdParaEditar = itemId;
+      limpiarMensaje('mensaje-modal-editar-item');
+      document.getElementById('editar-item-nombre').value = item.nombre;
+      document.getElementById('editar-item-cantidad').value = item.cantidad;
+      document.getElementById('editar-item-unidad').value = item.unidad;
+      document.getElementById('editar-item-categoria').value = item.categoria;
+      document.getElementById('editar-item-prioridad').value = item.prioridad;
+      document.getElementById('editar-item-precio-estimado').value = item.precio_estimado != null ? Number(item.precio_estimado).toLocaleString('es-CO') : '';
+      document.getElementById('editar-item-observaciones').value = item.observaciones || '';
+      new bootstrap.Modal(document.getElementById('modal-editar-item')).show();
     }
 
     function filaItem(item) {
@@ -356,11 +433,14 @@
               item.precio_final != null ? ` · ${formatearMoneda(item.precio_final)}` : ''
             }`;
 
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar="${item.id}">✏️ Editar</button>`;
       const acciones =
         item.estado === 'pendiente'
           ? `<button class="btn btn-sm btn-domus-primary" data-comprar="${item.id}" data-nombre="${escapeHtml(item.nombre)}">Comprado</button>
+             ${editarBtn}
              <button class="btn btn-sm btn-outline-danger" data-eliminar="${item.id}">Eliminar</button>`
           : `<button class="btn btn-sm btn-outline-secondary" data-reabrir="${item.id}">Reabrir</button>
+             ${editarBtn}
              <button class="btn btn-sm btn-outline-danger" data-eliminar="${item.id}">Eliminar</button>`;
 
       return `
@@ -454,6 +534,38 @@
         mostrarMensaje('mensaje', 'No se pudo marcar como comprado: ' + error.message);
       } finally {
         alternarCargando('btn-confirmar-compra', false, 'Confirmar compra');
+      }
+    });
+
+    document.getElementById('form-editar-item').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-editar-item');
+
+      const nombre = document.getElementById('editar-item-nombre').value.trim();
+      const cantidad = Number(document.getElementById('editar-item-cantidad').value || 1);
+      const unidad = document.getElementById('editar-item-unidad').value;
+      const categoria = document.getElementById('editar-item-categoria').value;
+      const prioridad = document.getElementById('editar-item-prioridad').value;
+      const precioEstimado = obtenerValorNumerico(document.getElementById('editar-item-precio-estimado'));
+      const observaciones = document.getElementById('editar-item-observaciones').value.trim();
+
+      alternarCargando('btn-guardar-editar-item', true);
+      try {
+        await actualizarItem(itemIdParaEditar, {
+          nombre,
+          cantidad,
+          unidad,
+          categoria,
+          prioridad,
+          precio_estimado: precioEstimado || null,
+          observaciones: observaciones || null,
+        });
+        bootstrap.Modal.getInstance(document.getElementById('modal-editar-item'))?.hide();
+        await cargarItems();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-editar-item', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-editar-item', false, 'Guardar cambios');
       }
     });
 

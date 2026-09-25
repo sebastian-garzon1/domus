@@ -169,9 +169,20 @@
         }
         document.getElementById('nombre-hogar').textContent = hogar.nombre;
         document.getElementById('stat-presupuesto').textContent = formatearMoneda(hogar.presupuesto_mensual);
-        await cargarResumenMercado(hogar.id);
-        await cargarResumenGastos(hogar);
-        await cargarResumenServicios(hogar.id);
+
+        // Se piden los 3 módulos en paralelo (allSettled: si uno falla, los
+        // otros igual se pintan) porque el "Gastado este mes" real es la
+        // suma de los tres — no solo de Gastos. Los gastos personales no
+        // cuentan aquí (calcularResumenMes ya los excluye).
+        const [gastosR, itemsR, serviciosR] = await Promise.allSettled([
+          listarGastos(hogar.id),
+          listarItems(hogar.id),
+          listarServicios(hogar.id),
+        ]);
+
+        pintarGastadoDelMes(hogar, gastosR, itemsR, serviciosR);
+        pintarMercadoPendiente(itemsR);
+        pintarProximoPago(serviciosR);
       } catch (error) {
         mostrarMensaje('mensaje', 'No se pudo cargar el hogar: ' + error.message);
         document.getElementById('nombre-hogar').textContent = '—';
@@ -181,10 +192,28 @@
       }
     }
 
-    async function cargarResumenMercado(hogarId) {
+    function pintarGastadoDelMes(hogar, gastosR, itemsR, serviciosR) {
       try {
-        const items = await listarItems(hogarId);
-        const { totalEstimadoPendientes } = calcularTotales(items);
+        const totalGastos =
+          gastosR.status === 'fulfilled' ? calcularResumenMes(gastosR.value, hogar.presupuesto_mensual).totalGastado : 0;
+        const totalMercado = itemsR.status === 'fulfilled' ? calcularTotales(itemsR.value).totalGastadoMes : 0;
+        const totalServicios =
+          serviciosR.status === 'fulfilled' ? calcularResumenServicios(serviciosR.value).totalPagadoMes : 0;
+
+        if (gastosR.status === 'rejected' && itemsR.status === 'rejected' && serviciosR.status === 'rejected') {
+          document.getElementById('stat-gastado-mes').textContent = '—';
+          return;
+        }
+        document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastos + totalMercado + totalServicios);
+      } catch {
+        document.getElementById('stat-gastado-mes').textContent = '—';
+      }
+    }
+
+    function pintarMercadoPendiente(itemsR) {
+      try {
+        if (itemsR.status !== 'fulfilled') throw itemsR.reason;
+        const { totalEstimadoPendientes } = calcularTotales(itemsR.value);
         document.getElementById('stat-mercado-pendiente').textContent = formatearMoneda(totalEstimadoPendientes);
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.
@@ -192,21 +221,10 @@
       }
     }
 
-    async function cargarResumenGastos(hogar) {
+    function pintarProximoPago(serviciosR) {
       try {
-        const gastos = await listarGastos(hogar.id);
-        const { totalGastado } = calcularResumenMes(gastos, hogar.presupuesto_mensual);
-        document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastado);
-      } catch {
-        // El dashboard no debe romperse si falla el resumen de un módulo secundario.
-        document.getElementById('stat-gastado-mes').textContent = '—';
-      }
-    }
-
-    async function cargarResumenServicios(hogarId) {
-      try {
-        const servicios = await listarServicios(hogarId);
-        const { proximoPago } = calcularResumenServicios(servicios);
+        if (serviciosR.status !== 'fulfilled') throw serviciosR.reason;
+        const { proximoPago } = calcularResumenServicios(serviciosR.value);
         document.getElementById('stat-proximo-pago').textContent = proximoPago
           ? `${proximoPago.nombre} · ${formatearMoneda(proximoPago.monto)}`
           : 'Sin pendientes';
