@@ -22,30 +22,19 @@ export const CATEGORIAS = [
   { valor: 'otros', etiqueta: 'Otros' },
 ];
 
-/** Catálogo de métodos de pago (debe coincidir con el CHECK de sql/003_gastos.sql). */
-export const METODOS_PAGO = [
-  { valor: 'efectivo', etiqueta: 'Efectivo' },
-  { valor: 'tarjeta_debito', etiqueta: 'Tarjeta débito' },
-  { valor: 'tarjeta_credito', etiqueta: 'Tarjeta crédito' },
-  { valor: 'transferencia', etiqueta: 'Transferencia' },
-  { valor: 'otro', etiqueta: 'Otro' },
-];
-
 export function etiquetaCategoria(valor) {
   return CATEGORIAS.find((c) => c.valor === valor)?.etiqueta ?? valor;
 }
 
-export function etiquetaMetodoPago(valor) {
-  return METODOS_PAGO.find((m) => m.valor === valor)?.etiqueta ?? valor;
-}
-
 // registrado_por y pagado_por son dos FK distintas hacia profiles: hay que
 // nombrar la relación explícitamente (igual que en servicios_pagos), si no
-// PostgREST no sabe cuál de las dos usar.
+// PostgREST no sabe cuál de las dos usar. metodo_pago trae solo el nombre del
+// método de pago personal elegido (ver js/metodosPago.js) — puede ser null.
 const SELECT_GASTO = `
   *,
   registrado_por_perfil:profiles!gastos_registrado_por_fkey (id, nombre_completo, email),
-  pagado_por_perfil:profiles!gastos_pagado_por_fkey (id, nombre_completo, email)
+  pagado_por_perfil:profiles!gastos_pagado_por_fkey (id, nombre_completo, email),
+  metodo_pago:metodos_pago (id, nombre)
 `;
 
 /**
@@ -78,31 +67,42 @@ async function usuarioActualId() {
  */
 export async function listarGastos(hogarId) {
   const usuarioId = await usuarioActualId();
-  const [delHogar, personales] = await Promise.all([
-    supabase.from('gastos').select(SELECT_GASTO).eq('hogar_id', hogarId).eq('es_personal', false),
-    supabase.from('gastos').select(SELECT_GASTO).eq('es_personal', true).eq('registrado_por', usuarioId),
-  ]);
-  if (delHogar.error) throw delHogar.error;
-  if (personales.error) throw personales.error;
+  const consultas = [supabase.from('gastos').select(SELECT_GASTO).eq('es_personal', true).eq('registrado_por', usuarioId)];
+  // Sin hogar activo (ej. usuario que todavía no crea/entra a ningún hogar)
+  // simplemente no hay gastos del hogar que traer — los personales igual se ven.
+  if (hogarId) {
+    consultas.push(supabase.from('gastos').select(SELECT_GASTO).eq('hogar_id', hogarId).eq('es_personal', false));
+  }
+  const resultados = await Promise.all(consultas);
+  for (const r of resultados) if (r.error) throw r.error;
 
-  return [...delHogar.data, ...personales.data].sort((a, b) => {
-    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+  return resultados
+    .flatMap((r) => r.data)
+    .sort((a, b) => {
+      if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 }
 
-/** Gasto "del momento": ya pagado desde el instante en que se registra. */
+/**
+ * Gasto "del momento": ya pagado desde el instante en que se registra.
+ * hogarId puede ser null solo si campos.esPersonal es true (un gasto del
+ * hogar siempre necesita un hogar_id, lo exige la base de datos).
+ */
 export async function agregarGasto(hogarId, campos) {
   const usuarioId = await usuarioActualId();
+  if (!campos.esPersonal && !hogarId) {
+    throw new Error('Selecciona un hogar para registrar un gasto compartido');
+  }
 
   const { data, error } = await supabase
     .from('gastos')
     .insert({
-      hogar_id: hogarId,
+      hogar_id: hogarId || null,
       descripcion: campos.descripcion,
       categoria: campos.categoria || 'otros',
       monto: campos.monto,
-      metodo_pago: campos.metodoPago || 'efectivo',
+      metodo_pago_id: campos.metodoPagoId || null,
       fecha: campos.fecha || hoyLocal(),
       observaciones: campos.observaciones || null,
       es_personal: !!campos.esPersonal,
@@ -119,8 +119,11 @@ export async function actualizarGasto(gastoId, cambios) {
   if (error) throw error;
 }
 
-export async function marcarGastoPagado(gastoId) {
-  await actualizarGasto(gastoId, { estado: 'pagado' });
+/** metodoPagoId es opcional: con qué método se pagó (descuenta su saldo, ver sql/012). */
+export async function marcarGastoPagado(gastoId, metodoPagoId) {
+  const cambios = { estado: 'pagado' };
+  if (metodoPagoId) cambios.metodo_pago_id = metodoPagoId;
+  await actualizarGasto(gastoId, cambios);
 }
 
 /** Reabre un gasto pendiente que se había marcado pagado por error. */
@@ -162,30 +165,40 @@ export async function obtenerUrlComprobanteGasto(path) {
 
 // --- Gastos recurrentes (plantillas) ----------------------------------------
 
+const SELECT_RECURRENTE = '*, metodo_pago:metodos_pago (id, nombre)';
+
 /** Mismo criterio que listarGastos: las plantillas personales no dependen del hogar activo. */
 export async function listarRecurrentes(hogarId) {
   const usuarioId = await usuarioActualId();
-  const [delHogar, personales] = await Promise.all([
-    supabase.from('gastos_recurrentes').select('*').eq('hogar_id', hogarId).eq('es_personal', false),
-    supabase.from('gastos_recurrentes').select('*').eq('es_personal', true).eq('creado_por', usuarioId),
-  ]);
-  if (delHogar.error) throw delHogar.error;
-  if (personales.error) throw personales.error;
+  const consultas = [
+    supabase.from('gastos_recurrentes').select(SELECT_RECURRENTE).eq('es_personal', true).eq('creado_por', usuarioId),
+  ];
+  if (hogarId) {
+    consultas.push(
+      supabase.from('gastos_recurrentes').select(SELECT_RECURRENTE).eq('hogar_id', hogarId).eq('es_personal', false)
+    );
+  }
+  const resultados = await Promise.all(consultas);
+  for (const r of resultados) if (r.error) throw r.error;
 
-  return [...delHogar.data, ...personales.data].sort((a, b) => a.dia_mes - b.dia_mes);
+  return resultados.flatMap((r) => r.data).sort((a, b) => a.dia_mes - b.dia_mes);
 }
 
+/** hogarId puede ser null solo si campos.esPersonal es true (ver agregarGasto). */
 export async function agregarRecurrente(hogarId, campos) {
   const usuarioId = await usuarioActualId();
+  if (!campos.esPersonal && !hogarId) {
+    throw new Error('Selecciona un hogar para registrar un recurrente compartido');
+  }
 
   const { data, error } = await supabase
     .from('gastos_recurrentes')
     .insert({
-      hogar_id: hogarId,
+      hogar_id: hogarId || null,
       descripcion: campos.descripcion,
       categoria: campos.categoria || 'otros',
       monto: campos.monto,
-      metodo_pago: campos.metodoPago || 'efectivo',
+      metodo_pago_id: campos.metodoPagoId || null,
       dia_mes: campos.diaMes,
       es_personal: !!campos.esPersonal,
       numero_referencia: campos.numeroReferencia || null,
@@ -252,11 +265,11 @@ export async function generarPendientesDelMes(hogarId) {
   if (pendientesPorCrear.length === 0) return 0;
 
   const filas = pendientesPorCrear.map((r) => ({
-    hogar_id: hogarId,
+    hogar_id: r.hogar_id,
     descripcion: r.descripcion,
     categoria: r.categoria,
     monto: r.monto,
-    metodo_pago: r.metodo_pago,
+    metodo_pago_id: r.metodo_pago_id,
     fecha: fechaDelMes(r.dia_mes, hoy),
     estado: 'pendiente',
     es_personal: r.es_personal,
@@ -272,43 +285,29 @@ export async function generarPendientesDelMes(hogarId) {
 }
 
 /**
- * Calcula el resumen del mes actual contra el presupuesto del hogar: total
- * gastado (ya pagado), porcentaje usado, y un nivel de alerta para colorear
- * la UI. presupuestoMensual llega de hogares.presupuesto_mensual.
+ * Resumen del mes actual para una lista de gastos ya filtrada (el llamador
+ * decide el alcance: del hogar, personales, o ambos — esta función no sabe
+ * nada de hogares ni de presupuestos, solo suma lo que le pasan).
  */
-export function calcularResumenMes(gastos, presupuestoMensual) {
+export function calcularResumenMes(gastos) {
   const ahora = new Date();
-  // El presupuesto es del HOGAR: los gastos personales no cuentan aquí (son
-  // de quien los hizo, no salen de la plata compartida). Sí siguen viéndose
-  // en la lista normal de Gastos, solo no entran en este resumen.
   const delMes = gastos.filter((g) => {
-    if (g.estado !== 'pagado' || !g.fecha_pago || g.es_personal) return false;
+    if (g.estado !== 'pagado' || !g.fecha_pago) return false;
     const fecha = new Date(g.fecha_pago + 'T00:00:00');
     return fecha.getFullYear() === ahora.getFullYear() && fecha.getMonth() === ahora.getMonth();
   });
 
   const totalGastado = delMes.reduce((suma, g) => suma + Number(g.monto), 0);
-  const presupuesto = Number(presupuestoMensual) || 0;
-  const porcentaje = presupuesto > 0 ? (totalGastado / presupuesto) * 100 : 0;
-
-  let nivelAlerta = 'ok'; // ok | cerca | excedido
-  if (presupuesto > 0) {
-    if (porcentaje >= 100) nivelAlerta = 'excedido';
-    else if (porcentaje >= 80) nivelAlerta = 'cerca';
-  }
 
   const porCategoria = {};
   for (const g of delMes) {
     porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + Number(g.monto);
   }
 
-  const pendientes = gastos.filter((g) => g.estado === 'pendiente' && !g.es_personal);
+  const pendientes = gastos.filter((g) => g.estado === 'pendiente');
 
   return {
     totalGastado,
-    presupuesto,
-    porcentaje: Math.min(porcentaje, 999),
-    nivelAlerta,
     countGastosMes: delMes.length,
     porCategoria,
     countPendientes: pendientes.length,

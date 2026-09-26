@@ -7,6 +7,9 @@
   <link rel="manifest" href="../manifest.json" />
   <meta name="theme-color" content="#0d1117" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Domus" />
   <link rel="icon" href="../icons/icon-192.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
@@ -22,7 +25,9 @@
         <a href="../dashboard/" class="domus-sidebar-link active"><i class="bi bi-house"></i> Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
         <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
         <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+        <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
         <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
         <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
         <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
@@ -41,18 +46,22 @@
       <main class="domus-main flex-grow-1">
     <div id="mensaje"></div>
 
-    <div class="mb-4">
-      <p class="text-muted mb-1">Hogar activo</p>
-      <h2 id="nombre-hogar" class="mb-0"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</h2>
+    <div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-2">
+      <div>
+        <p class="text-muted mb-1">Hogar activo</p>
+        <h2 id="nombre-hogar" class="mb-0"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</h2>
+      </div>
+      <a href="../gastos/?nuevo=1" class="btn btn-domus-primary"><i class="bi bi-plus-lg"></i> Agregar gasto</a>
     </div>
 
-    <!-- Resumen rápido: se conecta a datos reales cuando exista el módulo de gastos/presupuesto -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-lg-3">
-        <div class="card domus-stat-card p-3 h-100">
-          <span class="text-muted small">Presupuesto mensual</span>
-          <span id="stat-presupuesto" class="h4 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
-        </div>
+        <a href="../billetera/" class="text-decoration-none">
+          <div class="card domus-stat-card p-3 h-100">
+            <span class="text-muted small"><i class="bi bi-wallet2"></i> Total en tus métodos</span>
+            <span id="stat-total-metodos" class="h4 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
+          </div>
+        </a>
       </div>
       <div class="col-6 col-lg-3">
         <div class="card domus-stat-card p-3 h-100">
@@ -92,7 +101,7 @@
           <div class="card domus-hogar-card shadow-sm p-3 h-100 d-flex flex-row align-items-center gap-3">
             <i class="bi bi-wallet2 domus-modulo-icono"></i>
             <div>
-              <strong class="d-block">Gastos y presupuesto</strong>
+              <strong class="d-block">Gastos</strong>
               <span class="small text-muted">Registro de gastos del hogar</span>
             </div>
           </div>
@@ -150,7 +159,9 @@
           <a href="../dashboard/" class="domus-sidebar-link active"><i class="bi bi-house"></i> Inicio</a>
           <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
           <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
           <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+        <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
           <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
           <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
           <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
@@ -168,10 +179,20 @@
     import { listarItems, calcularTotales } from '../js/mercado.js';
     import { listarGastos, calcularResumenMes } from '../js/gastos.js';
     import { listarServicios, calcularResumenServicios } from '../js/servicios.js';
+    import { listarMetodos, calcularTotalSaldo } from '../js/metodosPago.js';
     import { mostrarMensaje, formatearMoneda } from '../js/ui.js';
 
     const sesion = await protegerPagina();
-    if (sesion) await cargarHogarActivo();
+    if (sesion) {
+      await cargarHogarActivo();
+      listarMetodos()
+        .then((metodos) => {
+          document.getElementById('stat-total-metodos').textContent = formatearMoneda(calcularTotalSaldo(metodos));
+        })
+        .catch(() => {
+          document.getElementById('stat-total-metodos').textContent = '—';
+        });
+    }
 
     async function salir() {
       await cerrarSesion();
@@ -188,7 +209,6 @@
           return;
         }
         document.getElementById('nombre-hogar').textContent = hogar.nombre;
-        document.getElementById('stat-presupuesto').textContent = formatearMoneda(hogar.presupuesto_mensual);
 
         // Se piden los 3 módulos en paralelo (allSettled: si uno falla, los
         // otros igual se pintan) porque el "Gastado este mes" real es la
@@ -200,22 +220,24 @@
           listarServicios(hogar.id),
         ]);
 
-        pintarGastadoDelMes(hogar, gastosR, itemsR, serviciosR);
+        pintarGastadoDelMes(gastosR, itemsR, serviciosR);
         pintarMercadoPendiente(itemsR);
         pintarProximoPago(serviciosR);
       } catch (error) {
         mostrarMensaje('mensaje', 'No se pudo cargar el hogar: ' + error.message);
         document.getElementById('nombre-hogar').textContent = '—';
-        for (const id of ['stat-presupuesto', 'stat-gastado-mes', 'stat-mercado-pendiente', 'stat-proximo-pago']) {
+        for (const id of ['stat-gastado-mes', 'stat-mercado-pendiente', 'stat-proximo-pago']) {
           document.getElementById(id).textContent = '—';
         }
       }
     }
 
-    function pintarGastadoDelMes(hogar, gastosR, itemsR, serviciosR) {
+    function pintarGastadoDelMes(gastosR, itemsR, serviciosR) {
       try {
         const totalGastos =
-          gastosR.status === 'fulfilled' ? calcularResumenMes(gastosR.value, hogar.presupuesto_mensual).totalGastado : 0;
+          gastosR.status === 'fulfilled'
+            ? calcularResumenMes(gastosR.value.filter((g) => !g.es_personal)).totalGastado
+            : 0;
         const totalMercado = itemsR.status === 'fulfilled' ? calcularTotales(itemsR.value).totalGastadoMes : 0;
         const totalServicios =
           serviciosR.status === 'fulfilled' ? calcularResumenServicios(serviciosR.value).totalPagadoMes : 0;

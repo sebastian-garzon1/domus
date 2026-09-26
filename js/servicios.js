@@ -28,7 +28,8 @@ export function etiquetaCategoria(valor) {
 const SELECT_SERVICIO = `
   *,
   registrado_por_perfil:profiles!servicios_pagos_registrado_por_fkey (id, nombre_completo, email),
-  pagado_por_perfil:profiles!servicios_pagos_pagado_por_fkey (id, nombre_completo, email)
+  pagado_por_perfil:profiles!servicios_pagos_pagado_por_fkey (id, nombre_completo, email),
+  metodo_pago:metodos_pago (id, nombre)
 `;
 
 export async function listarServicios(hogarId) {
@@ -69,8 +70,11 @@ export async function actualizarServicio(servicioId, cambios) {
   if (error) throw error;
 }
 
-export async function marcarPagado(servicioId) {
-  await actualizarServicio(servicioId, { estado: 'pagado' });
+/** metodoPagoId es opcional: con qué método se pagó (descuenta su saldo, ver sql/012). */
+export async function marcarPagado(servicioId, metodoPagoId) {
+  const cambios = { estado: 'pagado' };
+  if (metodoPagoId) cambios.metodo_pago_id = metodoPagoId;
+  await actualizarServicio(servicioId, cambios);
 }
 
 /** Reabre un pago (vuelve a "pendiente"; el trigger limpia pagado_por/fecha_pago). */
@@ -156,7 +160,7 @@ export function agruparServiciosPorFecha(servicios) {
 export async function listarRecurrentes(hogarId) {
   const { data, error } = await supabase
     .from('servicios_recurrentes')
-    .select('*')
+    .select('*, metodo_pago:metodos_pago (id, nombre)')
     .eq('hogar_id', hogarId)
     .order('dia_mes', { ascending: true });
   if (error) throw error;
@@ -174,6 +178,7 @@ export async function agregarRecurrente(hogarId, campos) {
       nombre: campos.nombre,
       categoria: campos.categoria || 'otros',
       monto: campos.monto,
+      metodo_pago_id: campos.metodoPagoId || null,
       dia_mes: campos.diaMes,
       numero_referencia: campos.numeroReferencia || null,
       enlace_pago: campos.enlacePago || null,
@@ -245,6 +250,7 @@ export async function generarPendientesDelMes(hogarId) {
     nombre: r.nombre,
     categoria: r.categoria,
     monto: r.monto,
+    metodo_pago_id: r.metodo_pago_id,
     fecha_vencimiento: fechaDelMes(r.dia_mes, hoy),
     numero_referencia: r.numero_referencia,
     enlace_pago: r.enlace_pago,

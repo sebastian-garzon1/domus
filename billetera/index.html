@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Domus — Billetera</title>
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#0d1117" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Domus" />
+  <link rel="icon" href="../icons/icon-192.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="../css/styles.css" rel="stylesheet" />
+  <script type="module" src="../js/register-sw.js"></script>
+</head>
+<body>
+  <div class="domus-app-shell">
+    <aside class="domus-sidebar d-none d-md-flex flex-column">
+      <a href="../dashboard/" class="domus-sidebar-brand"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</a>
+      <nav class="domus-sidebar-nav flex-grow-1">
+        <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+        <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
+        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+        <a href="../billetera/" class="domus-sidebar-link active"><i class="bi bi-piggy-bank"></i> Billetera</a>
+        <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+        <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+        <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
+      </nav>
+      <button id="btn-salir" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
+      <div class="domus-sidebar-credit">Sebas Dev © 2026</div>
+    </aside>
+
+    <div class="domus-content-col">
+      <div class="domus-topbar-mobile d-flex d-md-none align-items-center justify-content-between">
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"><i class="bi bi-list"></i></button>
+        <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
+        <span style="width: 38px"></span>
+      </div>
+
+      <main class="domus-main flex-grow-1" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 class="mb-0"><i class="bi bi-piggy-bank"></i> Billetera</h2>
+      <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-metodo">
+        + Nuevo método
+      </button>
+    </div>
+
+    <div id="mensaje"></div>
+
+    <div class="card domus-stat-card p-3 mb-4">
+      <span class="text-muted small">Total entre todos tus métodos</span>
+      <span id="stat-total" class="h3 mb-0 mt-1"><span class="spinner-border spinner-border-sm"></span></span>
+      <span class="text-muted small mt-1">100% personal — no depende del hogar activo</span>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-ingreso">
+        <i class="bi bi-plus-circle"></i> Registrar ingreso
+      </button>
+      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-transferencia">
+        <i class="bi bi-arrow-left-right"></i> Transferir entre métodos
+      </button>
+    </div>
+
+    <ul id="lista-metodos" class="list-group mb-4">
+      <li class="list-group-item text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</li>
+    </ul>
+
+    <h5 class="mb-3">Historial de movimientos</h5>
+    <ul id="lista-movimientos" class="list-group"></ul>
+      </main>
+    </div>
+
+    <div class="offcanvas offcanvas-start domus-sidebar-offcanvas d-md-none" tabindex="-1" id="sidebarOffcanvas">
+      <div class="offcanvas-header">
+        <span class="domus-sidebar-brand mb-0"><img src="../icons/icon-192.png" alt="" class="domus-sidebar-brand-logo" />Domus</span>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <div class="offcanvas-body d-flex flex-column">
+        <nav class="domus-sidebar-nav flex-grow-1">
+          <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
+          <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
+          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
+          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
+          <a href="../billetera/" class="domus-sidebar-link active"><i class="bi bi-piggy-bank"></i> Billetera</a>
+          <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
+          <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
+          <a href="../perfil/" class="domus-sidebar-link"><i class="bi bi-gear"></i> Mi perfil</a>
+        </nav>
+        <button id="btn-salir-movil" class="btn btn-outline-secondary btn-sm w-100">Cerrar sesión</button>
+        <div class="domus-sidebar-credit">Sebas Dev © 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: nuevo método de pago -->
+  <div class="modal fade" id="modal-nuevo-metodo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-nuevo-metodo">
+          <div class="modal-header">
+            <h5 class="modal-title">Nuevo método de pago</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-metodo"></div>
+            <div class="mb-3">
+              <label for="metodo-nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="metodo-nombre" placeholder="Ej. Nequi, Nu Bank, Bancolombia..." required />
+            </div>
+            <div class="mb-3">
+              <label for="metodo-saldo" class="form-label">Saldo actual (opcional)</label>
+              <input type="text" inputmode="numeric" class="form-control" id="metodo-saldo" placeholder="0" />
+              <div class="form-text">Cuánto dinero tienes ahí mismo, para que Domus empiece a contar desde ese punto.</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-agregar-metodo" class="btn btn-domus-primary">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: renombrar método -->
+  <div class="modal fade" id="modal-editar-metodo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-editar-metodo">
+          <div class="modal-header">
+            <h5 class="modal-title">Renombrar método</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-editar-metodo"></div>
+            <label for="editar-metodo-nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="editar-metodo-nombre" required />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar-metodo" class="btn btn-domus-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: registrar ingreso -->
+  <div class="modal fade" id="modal-ingreso" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-ingreso">
+          <div class="modal-header">
+            <h5 class="modal-title">Registrar ingreso</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-ingreso"></div>
+            <div class="mb-3">
+              <label for="ingreso-metodo" class="form-label">Método de pago</label>
+              <select id="ingreso-metodo" class="form-select" required></select>
+            </div>
+            <div class="mb-3">
+              <label for="ingreso-monto" class="form-label">Monto</label>
+              <input type="text" inputmode="numeric" class="form-control" id="ingreso-monto" required />
+            </div>
+            <div class="mb-3">
+              <label for="ingreso-descripcion" class="form-label">Descripción (opcional)</label>
+              <input type="text" class="form-control" id="ingreso-descripcion" placeholder="Ej. Nómina, pago de un amigo..." />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-ingreso" class="btn btn-domus-primary">Registrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: transferir entre métodos propios -->
+  <div class="modal fade" id="modal-transferencia" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-transferencia">
+          <div class="modal-header">
+            <h5 class="modal-title">Transferir entre métodos</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-transferencia"></div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="transferencia-origen" class="form-label">Desde</label>
+                <select id="transferencia-origen" class="form-select" required></select>
+              </div>
+              <div class="col-6">
+                <label for="transferencia-destino" class="form-label">Hacia</label>
+                <select id="transferencia-destino" class="form-select" required></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="transferencia-monto" class="form-label">Monto</label>
+              <input type="text" inputmode="numeric" class="form-control" id="transferencia-monto" required />
+            </div>
+            <div class="mb-3">
+              <label for="transferencia-descripcion" class="form-label">Descripción (opcional)</label>
+              <input type="text" class="form-control" id="transferencia-descripcion" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-transferencia" class="btn btn-domus-primary">Transferir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { protegerPagina, cerrarSesion } from '../js/auth.js';
+    import {
+      listarMetodos,
+      crearMetodo,
+      renombrarMetodo,
+      eliminarMetodo,
+      registrarIngreso,
+      transferir,
+      listarMovimientos,
+      calcularTotalSaldo,
+      TIPOS_MOVIMIENTO,
+    } from '../js/metodosPago.js';
+    import {
+      mostrarMensaje,
+      limpiarMensaje,
+      alternarCargando,
+      formatearMoneda,
+      activarFormatoMiles,
+      obtenerValorNumerico,
+    } from '../js/ui.js';
+
+    let metodos = [];
+    let metodoIdParaEditar = null;
+
+    async function salir() {
+      await cerrarSesion();
+      window.location.href = '../';
+    }
+    document.getElementById('btn-salir').addEventListener('click', salir);
+    document.getElementById('btn-salir-movil').addEventListener('click', salir);
+
+    activarFormatoMiles(document.getElementById('metodo-saldo'));
+    activarFormatoMiles(document.getElementById('ingreso-monto'));
+    activarFormatoMiles(document.getElementById('transferencia-monto'));
+
+    const sesion = await protegerPagina();
+    if (sesion) await cargarTodo();
+
+    async function cargarTodo() {
+      try {
+        const [metodosData, movimientos] = await Promise.all([listarMetodos(), listarMovimientos()]);
+        metodos = metodosData;
+        pintarMetodos();
+        pintarSelects();
+        pintarMovimientos(movimientos);
+        document.getElementById('stat-total').textContent = formatearMoneda(calcularTotalSaldo(metodos));
+      } catch (error) {
+        mostrarMensaje('mensaje', 'No se pudo cargar tu billetera: ' + error.message);
+      }
+    }
+
+    function pintarMetodos() {
+      const lista = document.getElementById('lista-metodos');
+      if (metodos.length === 0) {
+        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no tienes métodos de pago.</li>';
+        return;
+      }
+      lista.innerHTML = metodos
+        .map(
+          (m) => `
+        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>${escapeHtml(m.nombre)}</strong>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="fw-semibold domus-num ${Number(m.saldo) < 0 ? 'text-danger' : ''}">${formatearMoneda(m.saldo)}</span>
+            <button class="btn btn-sm btn-outline-secondary" data-editar="${m.id}"><i class="bi bi-pencil"></i> Renombrar</button>
+            <button class="btn btn-sm btn-outline-danger" data-eliminar="${m.id}">Eliminar</button>
+          </div>
+        </li>`
+        )
+        .join('');
+
+      lista.querySelectorAll('[data-editar]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+          const m = metodos.find((x) => x.id === boton.dataset.editar);
+          if (!m) return;
+          metodoIdParaEditar = m.id;
+          document.getElementById('editar-metodo-nombre').value = m.nombre;
+          limpiarMensaje('mensaje-modal-editar-metodo');
+          new bootstrap.Modal(document.getElementById('modal-editar-metodo')).show();
+        });
+      });
+      lista.querySelectorAll('[data-eliminar]').forEach((boton) => {
+        boton.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este método de pago? Los gastos que ya tenía registrados no se borran, solo quedan sin método asociado.')) return;
+          try {
+            await eliminarMetodo(boton.dataset.eliminar);
+            await cargarTodo();
+          } catch (error) {
+            mostrarMensaje('mensaje', 'No se pudo eliminar: ' + error.message);
+          }
+        });
+      });
+    }
+
+    function pintarSelects() {
+      const opciones = metodos.map((m) => `<option value="${m.id}">${escapeHtml(m.nombre)} (${formatearMoneda(m.saldo)})</option>`).join('');
+      document.getElementById('ingreso-metodo').innerHTML = opciones;
+      document.getElementById('transferencia-origen').innerHTML = opciones;
+      document.getElementById('transferencia-destino').innerHTML = opciones;
+    }
+
+    function pintarMovimientos(movimientos) {
+      const lista = document.getElementById('lista-movimientos');
+      if (movimientos.length === 0) {
+        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no hay movimientos.</li>';
+        return;
+      }
+      lista.innerHTML = movimientos
+        .map((mv) => {
+          const info = TIPOS_MOVIMIENTO[mv.tipo] || { etiqueta: mv.tipo, signo: 1 };
+          const signo = info.signo > 0 ? '+' : '−';
+          const clase = info.signo > 0 ? 'text-success' : 'text-danger';
+          const fecha = new Date(mv.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+          return `
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <div>${escapeHtml(mv.metodo?.nombre || '—')} <span class="badge text-bg-light border ms-1">${info.etiqueta}</span></div>
+                <small class="text-muted">${fecha}${mv.descripcion ? ' · ' + escapeHtml(mv.descripcion) : ''}</small>
+              </div>
+              <span class="fw-semibold domus-num ${clase}">${signo} ${formatearMoneda(mv.monto)}</span>
+            </li>`;
+        })
+        .join('');
+    }
+
+    document.getElementById('form-nuevo-metodo').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-metodo');
+      const nombre = document.getElementById('metodo-nombre').value.trim();
+      const saldo = obtenerValorNumerico(document.getElementById('metodo-saldo'));
+
+      alternarCargando('btn-agregar-metodo', true);
+      try {
+        await crearMetodo(nombre, saldo || 0);
+        document.getElementById('form-nuevo-metodo').reset();
+        bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-metodo'))?.hide();
+        await cargarTodo();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-metodo', 'No se pudo agregar el método: ' + error.message);
+      } finally {
+        alternarCargando('btn-agregar-metodo', false, 'Agregar');
+      }
+    });
+
+    document.getElementById('form-editar-metodo').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-editar-metodo');
+      const nombre = document.getElementById('editar-metodo-nombre').value.trim();
+
+      alternarCargando('btn-guardar-editar-metodo', true);
+      try {
+        await renombrarMetodo(metodoIdParaEditar, nombre);
+        bootstrap.Modal.getInstance(document.getElementById('modal-editar-metodo'))?.hide();
+        await cargarTodo();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-editar-metodo', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-editar-metodo', false, 'Guardar');
+      }
+    });
+
+    document.getElementById('form-ingreso').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-ingreso');
+      const metodoId = document.getElementById('ingreso-metodo').value;
+      const monto = obtenerValorNumerico(document.getElementById('ingreso-monto'));
+      const descripcion = document.getElementById('ingreso-descripcion').value.trim();
+
+      if (!monto || monto <= 0) {
+        mostrarMensaje('mensaje-modal-ingreso', 'Ingresa un monto mayor a cero.');
+        return;
+      }
+
+      alternarCargando('btn-guardar-ingreso', true);
+      try {
+        await registrarIngreso(metodoId, monto, descripcion);
+        document.getElementById('form-ingreso').reset();
+        bootstrap.Modal.getInstance(document.getElementById('modal-ingreso'))?.hide();
+        await cargarTodo();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-ingreso', 'No se pudo registrar el ingreso: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-ingreso', false, 'Registrar');
+      }
+    });
+
+    document.getElementById('form-transferencia').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-transferencia');
+      const origenId = document.getElementById('transferencia-origen').value;
+      const destinoId = document.getElementById('transferencia-destino').value;
+      const monto = obtenerValorNumerico(document.getElementById('transferencia-monto'));
+      const descripcion = document.getElementById('transferencia-descripcion').value.trim();
+
+      if (origenId === destinoId) {
+        mostrarMensaje('mensaje-modal-transferencia', 'Elige dos métodos distintos.');
+        return;
+      }
+      if (!monto || monto <= 0) {
+        mostrarMensaje('mensaje-modal-transferencia', 'Ingresa un monto mayor a cero.');
+        return;
+      }
+
+      alternarCargando('btn-guardar-transferencia', true);
+      try {
+        await transferir(origenId, destinoId, monto, descripcion);
+        document.getElementById('form-transferencia').reset();
+        bootstrap.Modal.getInstance(document.getElementById('modal-transferencia'))?.hide();
+        await cargarTodo();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-transferencia', 'No se pudo transferir: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-transferencia', false, 'Transferir');
+      }
+    });
+
+    function escapeHtml(texto) {
+      return String(texto ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+  </script>
+</body>
+</html>

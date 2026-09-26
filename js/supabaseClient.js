@@ -17,3 +17,19 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     detectSessionInUrl: true,
   },
 });
+
+// En móvil (sobre todo como PWA instalada) el sistema operativo congela el
+// timer de auto-refresh de Supabase cuando la app pasa a segundo plano. Si
+// se queda así más de lo que dura el token de acceso, al volver a abrirla
+// parece que "cerró sesión" aunque el refresh token siga siendo válido.
+// Retomar el auto-refresh apenas la app vuelve a primer plano evita eso
+// (ver recomendación de Supabase para apps móviles/PWA).
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      supabase.auth.startAutoRefresh();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
+  });
+}

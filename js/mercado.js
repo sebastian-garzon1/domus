@@ -41,7 +41,8 @@ export function prioridadInfo(valor) {
 const SELECT_ITEM = `
   *,
   agregado_por_perfil:profiles!mercado_items_agregado_por_fkey (id, nombre_completo, email),
-  comprado_por_perfil:profiles!mercado_items_comprado_por_fkey (id, nombre_completo, email)
+  comprado_por_perfil:profiles!mercado_items_comprado_por_fkey (id, nombre_completo, email),
+  metodo_pago:metodos_pago (id, nombre)
 `;
 
 /** Lista todos los ítems de mercado de un hogar (pendientes y comprados). */
@@ -84,12 +85,17 @@ export async function actualizarItem(itemId, cambios) {
   if (error) throw error;
 }
 
-/** Marca un ítem como comprado. precioFinal es opcional (queda en null si no se indica). */
-export async function marcarComprado(itemId, precioFinal) {
+/**
+ * Marca un ítem como comprado. precioFinal es opcional (queda en null si no
+ * se indica, se usa precio_estimado). metodoPagoId es opcional: con qué
+ * método personal se pagó (descuenta su saldo, ver sql/012).
+ */
+export async function marcarComprado(itemId, precioFinal, metodoPagoId) {
   const cambios = { estado: 'comprado' };
   if (precioFinal !== undefined && precioFinal !== null && precioFinal !== '') {
     cambios.precio_final = precioFinal;
   }
+  if (metodoPagoId) cambios.metodo_pago_id = metodoPagoId;
   await actualizarItem(itemId, cambios);
 }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Domus — Gastos</title>
+  <title>Domus — Gastos personales</title>
   <link rel="manifest" href="../manifest.json" />
   <meta name="theme-color" content="#0d1117" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
@@ -24,8 +24,8 @@
       <nav class="domus-sidebar-nav flex-grow-1">
         <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
-        <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
+        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos-personales/" class="domus-sidebar-link active"><i class="bi bi-person"></i> Gastos personales</a>
         <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
         <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
         <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
@@ -45,13 +45,14 @@
 
       <main class="domus-main flex-grow-1" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <h2 class="mb-0"><i class="bi bi-wallet2"></i> Gastos <span id="nombre-hogar">este hogar</span></h2>
+      <h2 class="mb-0"><i class="bi bi-person"></i> Gastos personales</h2>
       <button class="btn btn-domus-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-gasto">
         + Agregar gasto
       </button>
     </div>
 
     <div id="mensaje"></div>
+    <p class="text-muted small">Estos gastos son tuyos — no dependen del hogar activo y nadie más los ve.</p>
 
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-4">
@@ -114,7 +115,7 @@
     <div id="vista-recurrentes" style="display: none;">
       <div class="alert alert-secondary" role="alert">
         <strong>¿Cómo funcionan los recurrentes?</strong> Un "recurrente" es una plantilla para algo que
-        pagas cada mes (una cuota, el gimnasio, etc.): la creas <em>una sola vez</em> con su monto y el
+        pagas cada mes (Netflix, gimnasio, etc.): la creas <em>una sola vez</em> con su monto y el
         día en que vence. No genera nada por sí sola — cada mes, entra aquí y presiona
         <strong>"<i class="bi bi-arrow-clockwise"></i> Generar pendientes del mes"</strong> para crear el gasto pendiente de ese mes a partir
         de tus plantillas activas. Ese pendiente aparece en la pestaña "Gastos" y en el Calendario hasta
@@ -174,8 +175,8 @@
         <nav class="domus-sidebar-nav flex-grow-1">
           <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
           <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
-          <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
+          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../gastos-personales/" class="domus-sidebar-link active"><i class="bi bi-person"></i> Gastos personales</a>
           <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
           <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
           <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
@@ -194,14 +195,14 @@
       <div class="modal-content">
         <form id="form-nuevo-gasto">
           <div class="modal-header">
-            <h5 class="modal-title">Agregar gasto</h5>
+            <h5 class="modal-title">Agregar gasto personal</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div id="mensaje-modal-gasto"></div>
             <div class="mb-3">
               <label for="gasto-descripcion" class="form-label">Descripción</label>
-              <input type="text" class="form-control" id="gasto-descripcion" placeholder="Ej. Sandwich, mercado de la semana..." required />
+              <input type="text" class="form-control" id="gasto-descripcion" placeholder="Ej. Café, suscripción, gasolina..." required />
             </div>
             <div class="row g-2 mb-3">
               <div class="col-6">
@@ -362,7 +363,7 @@
             <div id="mensaje-modal-recurrente"></div>
             <div class="mb-3">
               <label for="recurrente-descripcion" class="form-label">Descripción</label>
-              <input type="text" class="form-control" id="recurrente-descripcion" placeholder="Ej. Cuota nevera, gimnasio..." required />
+              <input type="text" class="form-control" id="recurrente-descripcion" placeholder="Ej. Netflix, gimnasio..." required />
             </div>
             <div class="row g-2 mb-3">
               <div class="col-6">
@@ -406,7 +407,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script type="module">
     import { protegerPagina, cerrarSesion } from '../js/auth.js';
-    import { obtenerHogarActivoValidado } from '../js/hogares.js';
     import {
       listarGastos,
       agregarGasto,
@@ -437,7 +437,8 @@
       fechaLocalHoy,
     } from '../js/ui.js';
 
-    let hogarActivo = null;
+    // Esta página no depende de ningún hogar: hogarId siempre va como null/undefined,
+    // así que listarGastos/listarRecurrentes solo traen lo personal (ver js/gastos.js).
     let gastos = [];
     let recurrentes = [];
     let vistaActual = 'lista';
@@ -468,16 +469,10 @@
 
     const sesion = await protegerPagina();
     if (sesion) {
-      hogarActivo = await obtenerHogarActivoValidado();
-      if (!hogarActivo) {
-        window.location.href = '../hogares/';
-      } else {
-        document.getElementById('nombre-hogar').textContent = hogarActivo.nombre;
-        await llenarMetodos();
-        await cargarGastos();
-        if (new URLSearchParams(location.search).get('nuevo') === '1') {
-          new bootstrap.Modal(document.getElementById('modal-nuevo-gasto')).show();
-        }
+      await llenarMetodos();
+      await cargarGastos();
+      if (new URLSearchParams(location.search).get('nuevo') === '1') {
+        new bootstrap.Modal(document.getElementById('modal-nuevo-gasto')).show();
       }
     }
 
@@ -515,20 +510,14 @@
             document.getElementById('stat-total-metodos').textContent = '—';
           });
 
-        const [todos, recurrentesTodos] = await Promise.all([
-          listarGastos(hogarActivo.id),
-          listarRecurrentes(hogarActivo.id),
-        ]);
-        // Esta página es solo del hogar: los personales se manejan aparte en Gastos personales.
-        gastos = todos.filter((g) => !g.es_personal);
-        recurrentes = recurrentesTodos.filter((r) => !r.es_personal);
+        [gastos, recurrentes] = await Promise.all([listarGastos(), listarRecurrentes()]);
         pintarResumen();
         if (vistaActual === 'lista') pintarLista();
         else if (vistaActual === 'recurrentes') pintarRecurrentes();
         else renderCalendario();
       } catch (error) {
         lista.innerHTML = '';
-        mostrarMensaje('mensaje', 'No se pudo cargar el historial de gastos: ' + error.message);
+        mostrarMensaje('mensaje', 'No se pudo cargar tus gastos personales: ' + error.message);
       }
     }
 
@@ -648,8 +637,6 @@
     }
 
     function filaGasto(g, hoy) {
-      const quien = g.registrado_por_perfil?.nombre_completo || g.registrado_por_perfil?.email || '—';
-      const quienPago = g.pagado_por_perfil?.nombre_completo || g.pagado_por_perfil?.email;
       const vencido = g.estado === 'pendiente' && new Date(g.fecha + 'T00:00:00') < hoy;
 
       const estadoBadge =
@@ -660,10 +647,8 @@
 
       const infoSecundaria =
         g.estado === 'pendiente'
-          ? `Vence ${formatearFecha(g.fecha)} · Registrado por ${escapeHtml(quien)}`
-          : `${formatearFecha(g.fecha_pago || g.fecha)}${nombreMetodo ? ' · ' + escapeHtml(nombreMetodo) : ''} · ${
-              quienPago ? 'Pagado por ' + escapeHtml(quienPago) : 'Registrado por ' + escapeHtml(quien)
-            }`;
+          ? `Vence ${formatearFecha(g.fecha)}`
+          : `${formatearFecha(g.fecha_pago || g.fecha)}${nombreMetodo ? ' · ' + escapeHtml(nombreMetodo) : ''}`;
 
       const referenciaInfo = g.numero_referencia
         ? `<div class="small text-muted">Referencia: ${escapeHtml(g.numero_referencia)}</div>`
@@ -716,7 +701,7 @@
     function pintarRecurrentes() {
       const lista = document.getElementById('lista-recurrentes');
       if (recurrentes.length === 0) {
-        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no tienes gastos recurrentes del hogar.</li>';
+        lista.innerHTML = '<li class="list-group-item text-muted">Todavía no tienes gastos recurrentes personales.</li>';
         return;
       }
       lista.innerHTML = recurrentes.map(filaRecurrente).join('');
@@ -792,7 +777,7 @@
       limpiarMensaje('mensaje-recurrentes');
       alternarCargando('btn-generar-pendientes', true);
       try {
-        const creados = await generarPendientesDelMes(hogarActivo.id);
+        const creados = await generarPendientesDelMes();
         mostrarMensaje(
           'mensaje-recurrentes',
           creados > 0 ? `Se generaron ${creados} gasto(s) pendiente(s) del mes.` : 'Ya estaban generados todos los pendientes de este mes.',
@@ -825,7 +810,7 @@
 
       alternarCargando('btn-agregar-recurrente', true);
       try {
-        await agregarRecurrente(hogarActivo.id, {
+        await agregarRecurrente(null, {
           descripcion,
           monto,
           diaMes,
@@ -833,7 +818,7 @@
           metodoPagoId,
           numeroReferencia,
           enlacePago,
-          esPersonal: false,
+          esPersonal: true,
         });
         document.getElementById('form-nuevo-recurrente').reset();
         bootstrap.Modal.getInstance(document.getElementById('modal-nuevo-recurrente'))?.hide();
@@ -936,9 +921,6 @@
 
     // --- Gráfica de gastos por categoría (torta) ------------------------------
 
-    // Color fijo por categoría (no por posición), para que cada categoría
-    // conserve siempre su mismo color sin importar cuáles aparezcan un mes.
-    // Paleta categórica validada para fondo oscuro (ver skill de dataviz).
     const COLOR_POR_CATEGORIA = {
       mercado: '#3987e5',
       servicios: '#d95926',
@@ -1087,11 +1069,11 @@
 
       alternarCargando('btn-agregar-gasto', true);
       try {
-        const gasto = await agregarGasto(hogarActivo.id, {
-          descripcion, monto, fecha, categoria, metodoPagoId, observaciones, esPersonal: false,
+        const gasto = await agregarGasto(null, {
+          descripcion, monto, fecha, categoria, metodoPagoId, observaciones, esPersonal: true,
         });
         if (archivoComprobante) {
-          await subirComprobanteGasto(hogarActivo.id, gasto.id, archivoComprobante, false);
+          await subirComprobanteGasto(null, gasto.id, archivoComprobante, true);
         }
         document.getElementById('form-nuevo-gasto').reset();
         document.getElementById('gasto-fecha').value = fechaLocalHoy();
@@ -1151,7 +1133,7 @@
 
       alternarCargando('btn-guardar-comprobante-gasto', true);
       try {
-        await subirComprobanteGasto(hogarActivo.id, gastoIdParaAdjuntar, archivo, false);
+        await subirComprobanteGasto(null, gastoIdParaAdjuntar, archivo, true);
         bootstrap.Modal.getInstance(document.getElementById('modal-adjuntar-comprobante-gasto'))?.hide();
         await cargarGastos();
       } catch (error) {
@@ -1171,7 +1153,7 @@
       try {
         await marcarGastoPagado(gastoIdParaPagar, metodoPagoId);
         if (archivo) {
-          await subirComprobanteGasto(hogarActivo.id, gastoIdParaPagar, archivo, false);
+          await subirComprobanteGasto(null, gastoIdParaPagar, archivo, true);
         }
         bootstrap.Modal.getInstance(document.getElementById('modal-pagar-gasto'))?.hide();
         await cargarGastos();
