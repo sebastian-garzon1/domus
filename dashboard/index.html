@@ -51,7 +51,7 @@
         <p class="text-muted mb-1">Hogar activo</p>
         <h2 id="nombre-hogar" class="mb-0"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</h2>
       </div>
-      <a href="../gastos/?nuevo=1" class="btn btn-domus-primary"><i class="bi bi-plus-lg"></i> Agregar gasto</a>
+      <a id="btn-agregar-gasto" href="../gastos/?nuevo=1" class="btn btn-domus-primary"><i class="bi bi-plus-lg"></i> Agregar gasto</a>
     </div>
 
     <div class="row g-3 mb-4">
@@ -204,16 +204,28 @@
     async function cargarHogarActivo() {
       try {
         const hogar = await obtenerHogarActivoValidado();
+
         if (!hogar) {
-          window.location.href = '../hogares/';
+          // Sin hogar activo la página igual sirve: "Gastado este mes" sale
+          // solo con lo personal, y mercado/servicios (que sí son del hogar)
+          // quedan en "—" hasta que se elija uno.
+          document.getElementById('nombre-hogar').innerHTML =
+            '— <a href="../hogares/" class="small">elegir hogar</a>';
+          document.getElementById('btn-agregar-gasto').href = '../gastos-personales/?nuevo=1';
+          document.getElementById('stat-mercado-pendiente').textContent = '—';
+          document.getElementById('stat-proximo-pago').textContent = '—';
+
+          const [gastosR] = await Promise.allSettled([listarGastos()]);
+          pintarGastadoDelMes(gastosR, { status: 'fulfilled', value: [] }, { status: 'fulfilled', value: [] });
           return;
         }
+
         document.getElementById('nombre-hogar').textContent = hogar.nombre;
 
         // Se piden los 3 módulos en paralelo (allSettled: si uno falla, los
         // otros igual se pintan) porque el "Gastado este mes" real es la
-        // suma de los tres — no solo de Gastos. Los gastos personales no
-        // cuentan aquí (calcularResumenMes ya los excluye).
+        // suma de los tres — Gastos ya incluye los personales del usuario,
+        // sin importar en qué hogar los haya registrado.
         const [gastosR, itemsR, serviciosR] = await Promise.allSettled([
           listarGastos(hogar.id),
           listarItems(hogar.id),
@@ -234,10 +246,7 @@
 
     function pintarGastadoDelMes(gastosR, itemsR, serviciosR) {
       try {
-        const totalGastos =
-          gastosR.status === 'fulfilled'
-            ? calcularResumenMes(gastosR.value.filter((g) => !g.es_personal)).totalGastado
-            : 0;
+        const totalGastos = gastosR.status === 'fulfilled' ? calcularResumenMes(gastosR.value).totalGastado : 0;
         const totalMercado = itemsR.status === 'fulfilled' ? calcularTotales(itemsR.value).totalGastadoMes : 0;
         const totalServicios =
           serviciosR.status === 'fulfilled' ? calcularResumenServicios(serviciosR.value).totalPagadoMes : 0;
