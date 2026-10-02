@@ -86,6 +86,24 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
+-- 1b. Asegura que servicios_pagos/servicios_recurrentes tengan todas las
+--     columnas que esta migración necesita leer, sin importar si en este
+--     proyecto se alcanzaron a correr sql/005 y sql/012 completas sobre
+--     ellas (ADD COLUMN IF NOT EXISTS no rompe nada si ya existían).
+-- ----------------------------------------------------------------------------
+
+alter table if exists public.servicios_pagos
+  add column if not exists numero_referencia text,
+  add column if not exists enlace_pago text,
+  add column if not exists metodo_pago_id uuid references public.metodos_pago(id) on delete set null,
+  add column if not exists recurrente_id uuid;
+
+alter table if exists public.servicios_recurrentes
+  add column if not exists numero_referencia text,
+  add column if not exists enlace_pago text,
+  add column if not exists metodo_pago_id uuid references public.metodos_pago(id) on delete set null;
+
+-- ----------------------------------------------------------------------------
 -- 2. MIGRA servicios_recurrentes -> gastos_recurrentes (mismo id)
 -- ----------------------------------------------------------------------------
 
