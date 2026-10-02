@@ -64,7 +64,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $func$
 begin
   if tg_op in ('UPDATE', 'DELETE') then
     if old.estado = 'pagado' and old.metodo_pago_id is not null and old.monto is not null then
@@ -83,7 +83,7 @@ begin
 
   return coalesce(new, old);
 end;
-$$;
+$func$;
 
 -- ----------------------------------------------------------------------------
 -- 1b. Asegura que servicios_pagos/servicios_recurrentes tengan todas las
