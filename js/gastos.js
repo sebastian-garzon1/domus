@@ -237,6 +237,19 @@ export async function alternarActivoRecurrente(recurrenteId, activo) {
   await actualizarRecurrente(recurrenteId, { activo });
 }
 
+/** Edita los datos de una plantilla recurrente ya creada (no toca hogar_id ni es_personal). */
+export async function editarRecurrente(recurrenteId, campos) {
+  await actualizarRecurrente(recurrenteId, {
+    descripcion: campos.descripcion,
+    categoria: campos.categoria || 'otros',
+    monto: campos.monto,
+    metodo_pago_id: campos.metodoPagoId || null,
+    dia_mes: campos.diaMes,
+    numero_referencia: campos.numeroReferencia || null,
+    enlace_pago: campos.enlacePago || null,
+  });
+}
+
 export async function eliminarRecurrente(recurrenteId) {
   const { error } = await supabase.from('gastos_recurrentes').delete().eq('id', recurrenteId);
   if (error) throw error;

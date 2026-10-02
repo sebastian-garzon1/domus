@@ -401,6 +401,59 @@
     </div>
   </div>
 
+  <!-- Modal: editar gasto recurrente (plantilla) -->
+  <div class="modal fade" id="modal-editar-recurrente" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="form-editar-recurrente">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar gasto recurrente</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="mensaje-modal-editar-recurrente"></div>
+            <div class="mb-3">
+              <label for="editar-recurrente-descripcion" class="form-label">Descripción</label>
+              <input type="text" class="form-control" id="editar-recurrente-descripcion" required />
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-recurrente-monto" class="form-label">Monto</label>
+                <input type="text" inputmode="numeric" class="form-control" id="editar-recurrente-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="editar-recurrente-dia-mes" class="form-label">Día del mes</label>
+                <input type="number" min="1" max="28" class="form-control" id="editar-recurrente-dia-mes" placeholder="1-28" required />
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="editar-recurrente-categoria" class="form-label">Categoría</label>
+                <select id="editar-recurrente-categoria" class="form-select"></select>
+              </div>
+              <div class="col-6">
+                <label for="editar-recurrente-metodo-pago" class="form-label">Método de pago</label>
+                <select id="editar-recurrente-metodo-pago" class="form-select"></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editar-recurrente-referencia" class="form-label">Número de referencia (opcional)</label>
+              <input type="text" class="form-control" id="editar-recurrente-referencia" />
+            </div>
+            <div class="mb-3">
+              <label for="editar-recurrente-enlace-pago" class="form-label">Enlace de pago (opcional)</label>
+              <input type="url" class="form-control" id="editar-recurrente-enlace-pago" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btn-guardar-editar-recurrente" class="btn btn-domus-primary">Guardar cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script type="module">
@@ -418,6 +471,7 @@
       obtenerUrlComprobanteGasto,
       listarRecurrentes,
       agregarRecurrente,
+      editarRecurrente,
       alternarActivoRecurrente,
       eliminarRecurrente,
       generarPendientesDelMes,
@@ -443,6 +497,7 @@
     let gastoIdParaAdjuntar = null;
     let gastoIdParaPagar = null;
     let gastoIdParaEditar = null;
+    let recurrenteIdParaEditar = null;
     let mesCalendario = new Date();
     mesCalendario.setDate(1);
     let diaSeleccionado = null;
@@ -461,6 +516,7 @@
     activarFormatoMiles(document.getElementById('gasto-monto'));
     activarFormatoMiles(document.getElementById('recurrente-monto'));
     activarFormatoMiles(document.getElementById('editar-monto'));
+    activarFormatoMiles(document.getElementById('editar-recurrente-monto'));
 
     llenarCategorias();
     document.getElementById('gasto-fecha').value = fechaLocalHoy();
@@ -479,6 +535,7 @@
       document.getElementById('gasto-categoria').innerHTML = opciones;
       document.getElementById('recurrente-categoria').innerHTML = opciones;
       document.getElementById('editar-categoria').innerHTML = opciones;
+      document.getElementById('editar-recurrente-categoria').innerHTML = opciones;
     }
 
     async function llenarMetodos() {
@@ -495,6 +552,7 @@
       document.getElementById('recurrente-metodo-pago').innerHTML = opciones;
       document.getElementById('editar-metodo-pago').innerHTML = opciones;
       document.getElementById('pagar-metodo-pago').innerHTML = opciones;
+      document.getElementById('editar-recurrente-metodo-pago').innerHTML = opciones;
     }
 
     async function cargarGastos() {
@@ -736,6 +794,24 @@
           }
         });
       });
+      lista.querySelectorAll('[data-editar-recurrente]').forEach((boton) => {
+        boton.addEventListener('click', () => abrirModalEditarRecurrente(boton.dataset.editarRecurrente));
+      });
+    }
+
+    function abrirModalEditarRecurrente(recurrenteId) {
+      const r = recurrentes.find((x) => x.id === recurrenteId);
+      if (!r) return;
+      recurrenteIdParaEditar = recurrenteId;
+      limpiarMensaje('mensaje-modal-editar-recurrente');
+      document.getElementById('editar-recurrente-descripcion').value = r.descripcion;
+      document.getElementById('editar-recurrente-monto').value = r.monto ? Number(r.monto).toLocaleString('es-CO') : '';
+      document.getElementById('editar-recurrente-dia-mes').value = r.dia_mes;
+      document.getElementById('editar-recurrente-categoria').value = r.categoria;
+      document.getElementById('editar-recurrente-metodo-pago').value = r.metodo_pago_id || '';
+      document.getElementById('editar-recurrente-referencia').value = r.numero_referencia || '';
+      document.getElementById('editar-recurrente-enlace-pago').value = r.enlace_pago || '';
+      new bootstrap.Modal(document.getElementById('modal-editar-recurrente')).show();
     }
 
     function filaRecurrente(r) {
@@ -767,6 +843,7 @@
             <span class="fw-semibold domus-num">${formatearMoneda(r.monto)}</span>
             ${enlaceInfo}
             ${accionActivo}
+            <button class="btn btn-sm btn-outline-secondary" data-editar-recurrente="${r.id}" title="Editar"><i class="bi bi-pencil"></i></button>
             <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}" title="Eliminar"><i class="bi bi-trash"></i></button>
           </div>
         </li>`;
@@ -826,6 +903,37 @@
         mostrarMensaje('mensaje-modal-recurrente', 'No se pudo agregar el recurrente: ' + error.message);
       } finally {
         alternarCargando('btn-agregar-recurrente', false, 'Agregar');
+      }
+    });
+
+    document.getElementById('form-editar-recurrente').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje('mensaje-modal-editar-recurrente');
+
+      const descripcion = document.getElementById('editar-recurrente-descripcion').value.trim();
+      const monto = obtenerValorNumerico(document.getElementById('editar-recurrente-monto'));
+      const diaMes = Number(document.getElementById('editar-recurrente-dia-mes').value);
+      const categoria = document.getElementById('editar-recurrente-categoria').value;
+      const metodoPagoId = document.getElementById('editar-recurrente-metodo-pago').value || null;
+      const numeroReferencia = document.getElementById('editar-recurrente-referencia').value.trim();
+      const enlacePago = document.getElementById('editar-recurrente-enlace-pago').value.trim();
+
+      if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
+        mostrarMensaje('mensaje-modal-editar-recurrente', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
+
+      alternarCargando('btn-guardar-editar-recurrente', true);
+      try {
+        await editarRecurrente(recurrenteIdParaEditar, {
+          descripcion, monto, diaMes, categoria, metodoPagoId, numeroReferencia, enlacePago,
+        });
+        bootstrap.Modal.getInstance(document.getElementById('modal-editar-recurrente'))?.hide();
+        await cargarGastos();
+      } catch (error) {
+        mostrarMensaje('mensaje-modal-editar-recurrente', 'No se pudo guardar: ' + error.message);
+      } finally {
+        alternarCargando('btn-guardar-editar-recurrente', false, 'Guardar cambios');
       }
     });
 
