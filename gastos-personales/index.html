@@ -24,9 +24,8 @@
       <nav class="domus-sidebar-nav flex-grow-1">
         <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos hogar</a>
         <a href="../gastos-personales/" class="domus-sidebar-link active"><i class="bi bi-person"></i> Gastos personales</a>
-        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
         <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
         <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
         <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -175,9 +174,8 @@
         <nav class="domus-sidebar-nav flex-grow-1">
           <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
           <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos hogar</a>
           <a href="../gastos-personales/" class="domus-sidebar-link active"><i class="bi bi-person"></i> Gastos personales</a>
-          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
           <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
           <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
           <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -655,27 +653,28 @@
         : '';
 
       const pagarLinkBtn = g.enlace_pago
-        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Ir a pagar</a>`
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer" title="Ir a pagar"><i class="bi bi-credit-card"></i></a>`
         : '';
 
       const comprobanteBtn = g.comprobante_path
-        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}"><i class="bi bi-file-earmark-text"></i> Ver comprobante</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}" title="Ver comprobante"><i class="bi bi-file-earmark-text"></i></button>`
         : g.estado === 'pagado'
-        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}"><i class="bi bi-paperclip"></i> Adjuntar</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}" title="Adjuntar comprobante"><i class="bi bi-paperclip"></i></button>`
         : '';
 
-      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}"><i class="bi bi-pencil"></i> Editar</button>`;
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}" title="Editar"><i class="bi bi-pencil"></i></button>`;
+      const eliminarBtn = `<button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}" title="Eliminar"><i class="bi bi-trash"></i></button>`;
 
       const acciones =
         g.estado === 'pendiente'
           ? `${pagarLinkBtn}
              <button class="btn btn-sm btn-domus-primary" data-pagar-gasto="${g.id}" data-nombre="${escapeHtml(g.descripcion)}">Marcar pagado</button>
              ${editarBtn}
-             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`
+             ${eliminarBtn}`
           : `${comprobanteBtn}
-             ${g.recurrente_id ? `<button class="btn btn-sm btn-outline-secondary" data-reabrir-gasto="${g.id}">Reabrir</button>` : ''}
+             ${g.recurrente_id ? `<button class="btn btn-sm btn-outline-secondary" data-reabrir-gasto="${g.id}" title="Reabrir"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
              ${editarBtn}
-             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`;
+             ${eliminarBtn}`;
 
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -750,8 +749,8 @@
         ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(r.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Enlace de pago</a>`
         : '';
       const accionActivo = r.activo
-        ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}">Desactivar</button>`
-        : `<button class="btn btn-sm btn-outline-secondary" data-activar="${r.id}">Activar</button>`;
+        ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}" title="Desactivar"><i class="bi bi-pause-fill"></i></button>`
+        : `<button class="btn btn-sm btn-outline-secondary" data-activar="${r.id}" title="Activar"><i class="bi bi-play-fill"></i></button>`;
 
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -768,7 +767,7 @@
             <span class="fw-semibold domus-num">${formatearMoneda(r.monto)}</span>
             ${enlaceInfo}
             ${accionActivo}
-            <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}">Eliminar</button>
+            <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}" title="Eliminar"><i class="bi bi-trash"></i></button>
           </div>
         </li>`;
     }
@@ -873,6 +872,7 @@
 
         const dots = gastosDia
           .map((g) => {
+            if (g.estado === 'pagado') return `<span class="domus-calendario-dot pagado"></span>`;
             const vencido = fechaStr < hoyStr;
             return `<span class="domus-calendario-dot ${vencido ? 'vencido' : 'pendiente'}"></span>`;
           })
@@ -906,14 +906,14 @@
       const fechaLegible = formatearFecha(diaSeleccionado);
 
       if (gastosDia.length === 0) {
-        contenedor.innerHTML = `<p class="text-muted">No hay gastos pendientes para el ${fechaLegible}.</p>`;
+        contenedor.innerHTML = `<p class="text-muted">No hay gastos para el ${fechaLegible}.</p>`;
         return;
       }
 
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
       contenedor.innerHTML = `
-        <h6 class="mb-2">Pendientes del ${fechaLegible}</h6>
+        <h6 class="mb-2">Gastos del ${fechaLegible}</h6>
         <ul class="list-group">${gastosDia.map((g) => filaGasto(g, hoy)).join('')}</ul>`;
 
       conectarAccionesFila(contenedor);
@@ -923,6 +923,14 @@
 
     const COLOR_POR_CATEGORIA = {
       mercado: '#3987e5',
+      energia: '#e0a429',
+      agua: '#2bb4c9',
+      gas: '#e2654b',
+      internet: '#6a5fcf',
+      telefono: '#3fae7a',
+      arriendo: '#b05ccf',
+      streaming: '#d1428c',
+      seguro: '#8a8f3d',
       servicios: '#d95926',
       transporte: '#199e70',
       salud: '#c98500',

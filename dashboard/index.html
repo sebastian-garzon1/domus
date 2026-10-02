@@ -24,9 +24,8 @@
       <nav class="domus-sidebar-nav flex-grow-1">
         <a href="../dashboard/" class="domus-sidebar-link active"><i class="bi bi-house"></i> Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos hogar</a>
         <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
-        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
         <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
         <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
         <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -101,19 +100,19 @@
           <div class="card domus-hogar-card shadow-sm p-3 h-100 d-flex flex-row align-items-center gap-3">
             <i class="bi bi-wallet2 domus-modulo-icono"></i>
             <div>
-              <strong class="d-block">Gastos</strong>
-              <span class="small text-muted">Registro de gastos del hogar</span>
+              <strong class="d-block">Gastos hogar</strong>
+              <span class="small text-muted">Gastos, servicios y pagos recurrentes</span>
             </div>
           </div>
         </a>
       </div>
       <div class="col-12 col-md-6 col-lg-4">
-        <a href="../servicios/" class="text-decoration-none">
+        <a href="../gastos-personales/" class="text-decoration-none">
           <div class="card domus-hogar-card shadow-sm p-3 h-100 d-flex flex-row align-items-center gap-3">
-            <i class="bi bi-receipt domus-modulo-icono"></i>
+            <i class="bi bi-person domus-modulo-icono"></i>
             <div>
-              <strong class="d-block">Servicios y pagos</strong>
-              <span class="small text-muted">Pagos recurrentes y comprobantes</span>
+              <strong class="d-block">Gastos personales</strong>
+              <span class="small text-muted">Solo tuyos, sin importar el hogar</span>
             </div>
           </div>
         </a>
@@ -158,9 +157,8 @@
         <nav class="domus-sidebar-nav flex-grow-1">
           <a href="../dashboard/" class="domus-sidebar-link active"><i class="bi bi-house"></i> Inicio</a>
           <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../gastos/" class="domus-sidebar-link"><i class="bi bi-wallet2"></i> Gastos hogar</a>
         <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
-          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
         <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
           <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
           <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -178,7 +176,6 @@
     import { obtenerHogarActivoValidado } from '../js/hogares.js';
     import { listarItems, calcularTotales } from '../js/mercado.js';
     import { listarGastos, calcularResumenMes } from '../js/gastos.js';
-    import { listarServicios, calcularResumenServicios } from '../js/servicios.js';
     import { listarMetodos, calcularTotalSaldo } from '../js/metodosPago.js';
     import { mostrarMensaje, formatearMoneda } from '../js/ui.js';
 
@@ -216,25 +213,25 @@
           document.getElementById('stat-proximo-pago').textContent = '—';
 
           const [gastosR] = await Promise.allSettled([listarGastos()]);
-          pintarGastadoDelMes(gastosR, { status: 'fulfilled', value: [] }, { status: 'fulfilled', value: [] });
+          pintarGastadoDelMes(gastosR, { status: 'fulfilled', value: [] });
           return;
         }
 
         document.getElementById('nombre-hogar').textContent = hogar.nombre;
 
-        // Se piden los 3 módulos en paralelo (allSettled: si uno falla, los
-        // otros igual se pintan) porque el "Gastado este mes" real es la
-        // suma de los tres — Gastos ya incluye los personales del usuario,
-        // sin importar en qué hogar los haya registrado.
-        const [gastosR, itemsR, serviciosR] = await Promise.allSettled([
+        // Se piden los 2 módulos en paralelo (allSettled: si uno falla, el
+        // otro igual se pinta) porque el "Gastado este mes" real es la suma
+        // de ambos — Gastos ya incluye los personales del usuario (sin
+        // importar en qué hogar los haya registrado) y los servicios, que
+        // ahora viven dentro de Gastos.
+        const [gastosR, itemsR] = await Promise.allSettled([
           listarGastos(hogar.id),
           listarItems(hogar.id),
-          listarServicios(hogar.id),
         ]);
 
-        pintarGastadoDelMes(gastosR, itemsR, serviciosR);
+        pintarGastadoDelMes(gastosR, itemsR);
         pintarMercadoPendiente(itemsR);
-        pintarProximoPago(serviciosR);
+        pintarProximoPago(gastosR);
       } catch (error) {
         mostrarMensaje('mensaje', 'No se pudo cargar el hogar: ' + error.message);
         document.getElementById('nombre-hogar').textContent = '—';
@@ -244,18 +241,16 @@
       }
     }
 
-    function pintarGastadoDelMes(gastosR, itemsR, serviciosR) {
+    function pintarGastadoDelMes(gastosR, itemsR) {
       try {
         const totalGastos = gastosR.status === 'fulfilled' ? calcularResumenMes(gastosR.value).totalGastado : 0;
         const totalMercado = itemsR.status === 'fulfilled' ? calcularTotales(itemsR.value).totalGastadoMes : 0;
-        const totalServicios =
-          serviciosR.status === 'fulfilled' ? calcularResumenServicios(serviciosR.value).totalPagadoMes : 0;
 
-        if (gastosR.status === 'rejected' && itemsR.status === 'rejected' && serviciosR.status === 'rejected') {
+        if (gastosR.status === 'rejected' && itemsR.status === 'rejected') {
           document.getElementById('stat-gastado-mes').textContent = '—';
           return;
         }
-        document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastos + totalMercado + totalServicios);
+        document.getElementById('stat-gastado-mes').textContent = formatearMoneda(totalGastos + totalMercado);
       } catch {
         document.getElementById('stat-gastado-mes').textContent = '—';
       }
@@ -272,12 +267,14 @@
       }
     }
 
-    function pintarProximoPago(serviciosR) {
+    function pintarProximoPago(gastosR) {
       try {
-        if (serviciosR.status !== 'fulfilled') throw serviciosR.reason;
-        const { proximoPago } = calcularResumenServicios(serviciosR.value);
+        if (gastosR.status !== 'fulfilled') throw gastosR.reason;
+        const proximoPago = gastosR.value
+          .filter((g) => !g.es_personal && g.estado === 'pendiente')
+          .sort((a, b) => (a.fecha < b.fecha ? -1 : 1))[0];
         document.getElementById('stat-proximo-pago').textContent = proximoPago
-          ? `${proximoPago.nombre} · ${formatearMoneda(proximoPago.monto)}`
+          ? `${proximoPago.descripcion} · ${proximoPago.monto ? formatearMoneda(proximoPago.monto) : 'monto por definir'}`
           : 'Sin pendientes';
       } catch {
         // El dashboard no debe romperse si falla el resumen de un módulo secundario.

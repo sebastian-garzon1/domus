@@ -3,16 +3,22 @@
 // ============================================================================
 import { supabase } from './supabaseClient.js';
 
-// Mismo bucket privado que usa servicios.js — sus políticas de Storage solo
-// exigen que la ruta empiece por "{hogar_id}/..." (gastos del hogar) o por
-// "personal/{usuario_id}/..." (gastos personales), sin importar qué tabla
-// referencia el archivo.
+// Bucket privado de comprobantes: la ruta empieza por "{hogar_id}/..."
+// (gastos del hogar) o por "personal/{usuario_id}/..." (gastos personales).
 const BUCKET = 'comprobantes';
 
-/** Catálogo de categorías (debe coincidir con los CHECK de sql/003 y sql/008). */
+/** Catálogo de categorías (debe coincidir con el CHECK de sql/014). */
 export const CATEGORIAS = [
   { valor: 'mercado', etiqueta: 'Mercado' },
-  { valor: 'servicios', etiqueta: 'Servicios' },
+  { valor: 'energia', etiqueta: 'Energía' },
+  { valor: 'agua', etiqueta: 'Agua' },
+  { valor: 'gas', etiqueta: 'Gas' },
+  { valor: 'internet', etiqueta: 'Internet' },
+  { valor: 'telefono', etiqueta: 'Teléfono' },
+  { valor: 'arriendo', etiqueta: 'Arriendo' },
+  { valor: 'streaming', etiqueta: 'Streaming' },
+  { valor: 'seguro', etiqueta: 'Seguro' },
+  { valor: 'servicios', etiqueta: 'Otro servicio' },
   { valor: 'transporte', etiqueta: 'Transporte' },
   { valor: 'salud', etiqueta: 'Salud' },
   { valor: 'educacion', etiqueta: 'Educación' },
@@ -27,9 +33,9 @@ export function etiquetaCategoria(valor) {
 }
 
 // registrado_por y pagado_por son dos FK distintas hacia profiles: hay que
-// nombrar la relación explícitamente (igual que en servicios_pagos), si no
-// PostgREST no sabe cuál de las dos usar. metodo_pago trae solo el nombre del
-// método de pago personal elegido (ver js/metodosPago.js) — puede ser null.
+// nombrar la relación explícitamente, si no PostgREST no sabe cuál de las dos
+// usar. metodo_pago trae solo el nombre del método de pago personal elegido
+// (ver js/metodosPago.js) — puede ser null.
 const SELECT_GASTO = `
   *,
   registrado_por_perfil:profiles!gastos_registrado_por_fkey (id, nombre_completo, email),
@@ -79,7 +85,12 @@ export async function listarGastos(hogarId) {
   return resultados
     .flatMap((r) => r.data)
     .sort((a, b) => {
-      if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+      // Mismo criterio que lo que se muestra en pantalla: la fecha de pago si
+      // ya está pagado (puede ser distinta de "fecha", que ahí es el
+      // vencimiento original), o la fecha a secas si sigue pendiente.
+      const fa = a.fecha_pago || a.fecha;
+      const fb = b.fecha_pago || b.fecha;
+      if (fa !== fb) return fa < fb ? 1 : -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
 }
@@ -119,10 +130,16 @@ export async function actualizarGasto(gastoId, cambios) {
   if (error) throw error;
 }
 
-/** metodoPagoId es opcional: con qué método se pagó (descuenta su saldo, ver sql/012). */
-export async function marcarGastoPagado(gastoId, metodoPagoId) {
+/**
+ * metodoPagoId es opcional: con qué método se pagó (descuenta su saldo, ver
+ * sql/012). monto es opcional: solo hace falta pasarlo cuando el gasto no
+ * traía uno fijo (ej. viene de un recurrente de pago variable, como un
+ * servicio público) — si no se pasa, se conserva el monto que ya tenía.
+ */
+export async function marcarGastoPagado(gastoId, metodoPagoId, monto) {
   const cambios = { estado: 'pagado' };
   if (metodoPagoId) cambios.metodo_pago_id = metodoPagoId;
+  if (monto !== undefined && monto !== null) cambios.monto = monto;
   await actualizarGasto(gastoId, cambios);
 }
 
@@ -315,13 +332,18 @@ export function calcularResumenMes(gastos) {
   };
 }
 
-/** Agrupa los gastos pendientes por fecha ("YYYY-MM-DD" -> lista), para el calendario. */
+/**
+ * Agrupa los gastos por fecha ("YYYY-MM-DD" -> lista), para el calendario:
+ * los pendientes bajo su fecha de vencimiento, los pagados bajo su fecha de
+ * pago (puede ser otro día distinto al de vencimiento original).
+ */
 export function agruparGastosPorFecha(gastos) {
   const porFecha = new Map();
   for (const g of gastos) {
-    if (g.estado !== 'pendiente' || !g.fecha) continue;
-    if (!porFecha.has(g.fecha)) porFecha.set(g.fecha, []);
-    porFecha.get(g.fecha).push(g);
+    const fecha = g.estado === 'pagado' ? g.fecha_pago : g.fecha;
+    if (!fecha) continue;
+    if (!porFecha.has(fecha)) porFecha.set(fecha, []);
+    porFecha.get(fecha).push(g);
   }
   return porFecha;
 }

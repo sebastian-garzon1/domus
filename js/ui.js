@@ -78,6 +78,16 @@ export function obtenerValorNumerico(input) {
   return Number(String(input?.value ?? '').replace(/\D/g, '')) || 0;
 }
 
+/**
+ * Igual que obtenerValorNumerico(), pero un campo vacío devuelve null en vez
+ * de 0 — para montos opcionales (ej. un recurrente de pago variable, como un
+ * servicio público, que todavía no tiene un monto fijo).
+ */
+export function obtenerValorNumericoOpcional(input) {
+  const crudo = String(input?.value ?? '').replace(/\D/g, '');
+  return crudo ? Number(crudo) : null;
+}
+
 export function alternarCargando(botonId, cargando, textoNormal) {
   const boton = document.getElementById(botonId);
   if (!boton) return;

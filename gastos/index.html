@@ -24,9 +24,8 @@
       <nav class="domus-sidebar-nav flex-grow-1">
         <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
         <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-        <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
+        <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos hogar</a>
         <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
-        <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
         <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
         <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
         <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -174,9 +173,8 @@
         <nav class="domus-sidebar-nav flex-grow-1">
           <a href="../dashboard/" class="domus-sidebar-link"><i class="bi bi-house"></i> Inicio</a>
           <a href="../mercado/" class="domus-sidebar-link"><i class="bi bi-cart3"></i> Mercado</a>
-          <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos</a>
+          <a href="../gastos/" class="domus-sidebar-link active"><i class="bi bi-wallet2"></i> Gastos hogar</a>
           <a href="../gastos-personales/" class="domus-sidebar-link"><i class="bi bi-person"></i> Gastos personales</a>
-          <a href="../servicios/" class="domus-sidebar-link"><i class="bi bi-receipt"></i> Servicios</a>
           <a href="../billetera/" class="domus-sidebar-link"><i class="bi bi-piggy-bank"></i> Billetera</a>
           <a href="../miembros/" class="domus-sidebar-link"><i class="bi bi-people"></i> Miembros</a>
           <a href="../hogares/" class="domus-sidebar-link"><i class="bi bi-arrow-left-right"></i> Cambiar de hogar</a>
@@ -275,9 +273,15 @@
           </div>
           <div class="modal-body">
             <div id="mensaje-modal-pagar-gasto"></div>
-            <div class="mb-3">
-              <label for="pagar-metodo-pago" class="form-label">Método de pago</label>
-              <select id="pagar-metodo-pago" class="form-select"></select>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="pagar-monto" class="form-label">Monto pagado</label>
+                <input type="text" inputmode="numeric" class="form-control" id="pagar-monto" required />
+              </div>
+              <div class="col-6">
+                <label for="pagar-metodo-pago" class="form-label">Método de pago</label>
+                <select id="pagar-metodo-pago" class="form-select"></select>
+              </div>
             </div>
             <label for="pagar-comprobante-gasto" class="form-label">Comprobante (opcional)</label>
             <input type="file" class="form-control" id="pagar-comprobante-gasto" accept="image/*,.pdf" />
@@ -310,7 +314,7 @@
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label for="editar-monto" class="form-label">Monto</label>
-                <input type="text" inputmode="numeric" class="form-control" id="editar-monto" required />
+                <input type="text" inputmode="numeric" class="form-control" id="editar-monto" placeholder="Si aún no se sabe, déjalo vacío" />
               </div>
               <div class="col-6">
                 <label for="editar-fecha" class="form-label">Fecha</label>
@@ -366,14 +370,15 @@
             </div>
             <div class="row g-2 mb-3">
               <div class="col-6">
-                <label for="recurrente-monto" class="form-label">Monto</label>
-                <input type="text" inputmode="numeric" class="form-control" id="recurrente-monto" required />
+                <label for="recurrente-monto" class="form-label">Monto (opcional)</label>
+                <input type="text" inputmode="numeric" class="form-control" id="recurrente-monto" placeholder="Si varía cada mes, déjalo vacío" />
               </div>
               <div class="col-6">
                 <label for="recurrente-dia-mes" class="form-label">Día del mes</label>
                 <input type="number" min="1" max="28" class="form-control" id="recurrente-dia-mes" placeholder="1-28" required />
               </div>
             </div>
+            <div class="form-text mb-3">Si el monto cambia cada mes (ej. luz, agua), deja el campo vacío: lo pides al marcar cada pago como pagado.</div>
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label for="recurrente-categoria" class="form-label">Categoría</label>
@@ -434,6 +439,7 @@
       formatearMoneda,
       activarFormatoMiles,
       obtenerValorNumerico,
+      obtenerValorNumericoOpcional,
       fechaLocalHoy,
     } from '../js/ui.js';
 
@@ -462,6 +468,7 @@
     activarFormatoMiles(document.getElementById('gasto-monto'));
     activarFormatoMiles(document.getElementById('recurrente-monto'));
     activarFormatoMiles(document.getElementById('editar-monto'));
+    activarFormatoMiles(document.getElementById('pagar-monto'));
 
     llenarCategorias();
     document.getElementById('gasto-fecha').value = fechaLocalHoy();
@@ -610,8 +617,10 @@
       contenedor.querySelectorAll('[data-pagar-gasto]').forEach((boton) => {
         boton.addEventListener('click', () => {
           gastoIdParaPagar = boton.dataset.pagarGasto;
+          const g = gastos.find((x) => x.id === gastoIdParaPagar);
           document.getElementById('pagar-nombre-gasto').textContent = boton.dataset.nombre;
           document.getElementById('form-pagar-gasto').reset();
+          document.getElementById('pagar-monto').value = g?.monto ? Number(g.monto).toLocaleString('es-CO') : '';
           limpiarMensaje('mensaje-modal-pagar-gasto');
           new bootstrap.Modal(document.getElementById('modal-pagar-gasto')).show();
         });
@@ -637,7 +646,7 @@
       gastoIdParaEditar = gastoId;
       limpiarMensaje('mensaje-modal-editar-gasto');
       document.getElementById('editar-descripcion').value = g.descripcion;
-      document.getElementById('editar-monto').value = Number(g.monto).toLocaleString('es-CO');
+      document.getElementById('editar-monto').value = g.monto ? Number(g.monto).toLocaleString('es-CO') : '';
       document.getElementById('editar-fecha').value = g.fecha;
       document.getElementById('editar-categoria').value = g.categoria;
       document.getElementById('editar-metodo-pago').value = g.metodo_pago_id || '';
@@ -670,27 +679,30 @@
         : '';
 
       const pagarLinkBtn = g.enlace_pago
-        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Ir a pagar</a>`
+        ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(g.enlace_pago)}" target="_blank" rel="noopener noreferrer" title="Ir a pagar"><i class="bi bi-credit-card"></i></a>`
         : '';
 
       const comprobanteBtn = g.comprobante_path
-        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}"><i class="bi bi-file-earmark-text"></i> Ver comprobante</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-ver-comprobante-gasto="${g.comprobante_path}" title="Ver comprobante"><i class="bi bi-file-earmark-text"></i></button>`
         : g.estado === 'pagado'
-        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}"><i class="bi bi-paperclip"></i> Adjuntar</button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" data-adjuntar-gasto="${g.id}" title="Adjuntar comprobante"><i class="bi bi-paperclip"></i></button>`
         : '';
 
-      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}"><i class="bi bi-pencil"></i> Editar</button>`;
+      const editarBtn = `<button class="btn btn-sm btn-outline-secondary" data-editar-gasto="${g.id}" title="Editar"><i class="bi bi-pencil"></i></button>`;
+      const eliminarBtn = `<button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}" title="Eliminar"><i class="bi bi-trash"></i></button>`;
 
       const acciones =
         g.estado === 'pendiente'
           ? `${pagarLinkBtn}
              <button class="btn btn-sm btn-domus-primary" data-pagar-gasto="${g.id}" data-nombre="${escapeHtml(g.descripcion)}">Marcar pagado</button>
              ${editarBtn}
-             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`
+             ${eliminarBtn}`
           : `${comprobanteBtn}
-             ${g.recurrente_id ? `<button class="btn btn-sm btn-outline-secondary" data-reabrir-gasto="${g.id}">Reabrir</button>` : ''}
+             ${g.recurrente_id ? `<button class="btn btn-sm btn-outline-secondary" data-reabrir-gasto="${g.id}" title="Reabrir"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
              ${editarBtn}
-             <button class="btn btn-sm btn-outline-danger" data-eliminar="${g.id}">Eliminar</button>`;
+             ${eliminarBtn}`;
+
+      const montoTexto = g.monto ? formatearMoneda(g.monto) : '<span class="text-muted fst-italic">Por definir</span>';
 
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -705,7 +717,7 @@
             ${g.observaciones ? `<div class="small text-muted fst-italic">${escapeHtml(g.observaciones)}</div>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-semibold domus-num">${formatearMoneda(g.monto)}</span>
+            <span class="fw-semibold domus-num">${montoTexto}</span>
             ${acciones}
           </div>
         </li>`;
@@ -765,8 +777,10 @@
         ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(r.enlace_pago)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-credit-card"></i> Enlace de pago</a>`
         : '';
       const accionActivo = r.activo
-        ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}">Desactivar</button>`
-        : `<button class="btn btn-sm btn-outline-secondary" data-activar="${r.id}">Activar</button>`;
+        ? `<button class="btn btn-sm btn-outline-secondary" data-desactivar="${r.id}" title="Desactivar"><i class="bi bi-pause-fill"></i></button>`
+        : `<button class="btn btn-sm btn-outline-secondary" data-activar="${r.id}" title="Activar"><i class="bi bi-play-fill"></i></button>`;
+
+      const montoTexto = r.monto ? formatearMoneda(r.monto) : '<span class="text-muted fst-italic">Variable</span>';
 
       return `
         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -780,10 +794,10 @@
             ${referenciaInfo}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-semibold domus-num">${formatearMoneda(r.monto)}</span>
+            <span class="fw-semibold domus-num">${montoTexto}</span>
             ${enlaceInfo}
             ${accionActivo}
-            <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}">Eliminar</button>
+            <button class="btn btn-sm btn-outline-danger" data-eliminar-recurrente="${r.id}" title="Eliminar"><i class="bi bi-trash"></i></button>
           </div>
         </li>`;
     }
@@ -811,7 +825,7 @@
       limpiarMensaje('mensaje-modal-recurrente');
 
       const descripcion = document.getElementById('recurrente-descripcion').value.trim();
-      const monto = obtenerValorNumerico(document.getElementById('recurrente-monto'));
+      const monto = obtenerValorNumericoOpcional(document.getElementById('recurrente-monto'));
       const diaMes = Number(document.getElementById('recurrente-dia-mes').value);
       const categoria = document.getElementById('recurrente-categoria').value;
       const metodoPagoId = document.getElementById('recurrente-metodo-pago').value || null;
@@ -888,6 +902,7 @@
 
         const dots = gastosDia
           .map((g) => {
+            if (g.estado === 'pagado') return `<span class="domus-calendario-dot pagado"></span>`;
             const vencido = fechaStr < hoyStr;
             return `<span class="domus-calendario-dot ${vencido ? 'vencido' : 'pendiente'}"></span>`;
           })
@@ -921,14 +936,14 @@
       const fechaLegible = formatearFecha(diaSeleccionado);
 
       if (gastosDia.length === 0) {
-        contenedor.innerHTML = `<p class="text-muted">No hay gastos pendientes para el ${fechaLegible}.</p>`;
+        contenedor.innerHTML = `<p class="text-muted">No hay gastos para el ${fechaLegible}.</p>`;
         return;
       }
 
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
       contenedor.innerHTML = `
-        <h6 class="mb-2">Pendientes del ${fechaLegible}</h6>
+        <h6 class="mb-2">Gastos del ${fechaLegible}</h6>
         <ul class="list-group">${gastosDia.map((g) => filaGasto(g, hoy)).join('')}</ul>`;
 
       conectarAccionesFila(contenedor);
@@ -941,6 +956,14 @@
     // Paleta categórica validada para fondo oscuro (ver skill de dataviz).
     const COLOR_POR_CATEGORIA = {
       mercado: '#3987e5',
+      energia: '#e0a429',
+      agua: '#2bb4c9',
+      gas: '#e2654b',
+      internet: '#6a5fcf',
+      telefono: '#3fae7a',
+      arriendo: '#b05ccf',
+      streaming: '#d1428c',
+      seguro: '#8a8f3d',
       servicios: '#d95926',
       transporte: '#199e70',
       salud: '#c98500',
@@ -1109,7 +1132,7 @@
       limpiarMensaje('mensaje-modal-editar-gasto');
 
       const descripcion = document.getElementById('editar-descripcion').value.trim();
-      const monto = obtenerValorNumerico(document.getElementById('editar-monto'));
+      const monto = obtenerValorNumericoOpcional(document.getElementById('editar-monto'));
       const fecha = document.getElementById('editar-fecha').value;
       const categoria = document.getElementById('editar-categoria').value;
       const metodoPagoId = document.getElementById('editar-metodo-pago').value || null;
@@ -1119,6 +1142,11 @@
 
       if (enlacePago && !/^https?:\/\//.test(enlacePago)) {
         mostrarMensaje('mensaje-modal-editar-gasto', 'El enlace de pago debe empezar con http:// o https://');
+        return;
+      }
+      const gastoEditado = gastos.find((x) => x.id === gastoIdParaEditar);
+      if (!monto && gastoEditado?.estado === 'pagado') {
+        mostrarMensaje('mensaje-modal-editar-gasto', 'Un gasto ya pagado necesita un monto.');
         return;
       }
 
@@ -1166,10 +1194,15 @@
       limpiarMensaje('mensaje-modal-pagar-gasto');
       const archivo = document.getElementById('pagar-comprobante-gasto').files[0];
       const metodoPagoId = document.getElementById('pagar-metodo-pago').value || null;
+      const monto = obtenerValorNumericoOpcional(document.getElementById('pagar-monto'));
+      if (!monto) {
+        mostrarMensaje('mensaje-modal-pagar-gasto', 'Ingresa el monto pagado.');
+        return;
+      }
 
       alternarCargando('btn-confirmar-pago-gasto', true);
       try {
-        await marcarGastoPagado(gastoIdParaPagar, metodoPagoId);
+        await marcarGastoPagado(gastoIdParaPagar, metodoPagoId, monto);
         if (archivo) {
           await subirComprobanteGasto(hogarActivo.id, gastoIdParaPagar, archivo, false);
         }
